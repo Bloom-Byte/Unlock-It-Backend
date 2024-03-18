@@ -12,6 +12,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from drf_yasg.utils import swagger_auto_schema
 
 
+from app.response_examples.auth_examples import AuthResponseExamples
 from app.util_classes import APIResponses
 from app.enum_classes import APIMessages
 from app.serializers.auth_serializers import (
@@ -33,7 +34,10 @@ from app.serializers.auth_serializers import (
 
 
 class LoginView(APIView):
-    @swagger_auto_schema(request_body=LoginSerializer)
+
+    @swagger_auto_schema(
+        request_body=LoginSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
+    )
     def post(self, request, *args, **kwargs):
         form = LoginSerializer(data=request.data)
 
@@ -239,7 +243,11 @@ class DeleteAccountView(APIView):
 
 
 class ResetPasswordGenerateView(APIView):
-    @swagger_auto_schema(request_body=ForgotPasswordFirstSerializer)
+
+    @swagger_auto_schema(
+        request_body=ForgotPasswordFirstSerializer,
+        responses=AuthResponseExamples.PASSWORD_RESET_FIRST_RESPONSE,
+    )
     def post(self, request, *args, **kwargs):
         if request.user:
             return APIResponses.error_response(
@@ -261,7 +269,11 @@ class ResetPasswordGenerateView(APIView):
 
 
 class ResetPasswordVerifyView(APIView):
-    @swagger_auto_schema(request_body=ForgotPasswordSecondSerializer)
+
+    @swagger_auto_schema(
+        request_body=ForgotPasswordSecondSerializer,
+        responses=AuthResponseExamples.PASSWORD_RESET_SECOND_RESPONSE,
+    )
     def post(self, request, *args, **kwargs):
         if request.user:
             return APIResponses.error_response(
@@ -283,7 +295,11 @@ class ResetPasswordVerifyView(APIView):
 
 
 class ResetPasswordCompleteView(APIView):
-    @swagger_auto_schema(request_body=ForgotPasswordThirdSerializer)
+
+    @swagger_auto_schema(
+        request_body=ForgotPasswordThirdSerializer,
+        responses=AuthResponseExamples.PASSWORD_RESET_THIRD_RESPONSE,
+    )
     def post(self, request, *args, **kwargs):
         if request.user:
             return APIResponses.error_response(
@@ -293,7 +309,7 @@ class ResetPasswordCompleteView(APIView):
         form = ForgotPasswordThirdSerializer(data=request.data)
 
         if form.is_valid():
-            form.verify_otp()
+            form.reset_password()
 
             return APIResponses.success_response(
                 message=APIMessages.PASSWORD_RESET, status_code=HTTP_200_OK
