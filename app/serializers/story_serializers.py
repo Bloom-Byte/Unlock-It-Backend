@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from rest_framework import serializers
 
 
@@ -14,6 +16,15 @@ class StoryBriefDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
         fields = ["id", "title", "price", "author", "file_type", "reference_number", "created_at"]
+
+    def to_representation(self, instance: Story):
+        data = super().to_representation(instance)
+
+        data["shareable_link"] = (
+            settings.FRONT_END_SHARE_STORY_URL + f"xxxxxx-{instance.reference_number}"
+        )
+
+        return data
 
 
 class StoryFullDataSerializer(serializers.ModelSerializer):
@@ -62,6 +73,7 @@ class StorySerializer:
     def delete_story(story: Story):
         try:
             # TODO delete the file from s3 here
+            story.file.delete()
             story.delete()
             return True
 
@@ -82,9 +94,15 @@ class CreateStorySerializer(serializers.Serializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        _ = data["file"]
+        file = data["file"]
 
-        # TODO validate the file size
+        file_size_bytes = file.size
+        file_size_mb = (file_size_bytes / 1024) / 1024
+
+        if file_size_mb > settings.FILE_UPLOAD_MAX_SIZE_MB:
+            raise serializers.ValidationError(
+                {"file": f"Maximum file size of {settings.FILE_UPLOAD_MAX_SIZE_MB} MB exceeded"}
+            )
 
         return data
 
@@ -96,7 +114,8 @@ class CreateStorySerializer(serializers.Serializer):
         new_story.usage_number = self.validated_data["usage_number"]
         new_story.reference_number = CodeGenerator.generate_story_reference()
 
-        # TODO add link, file type
+        new_story.file = self.validated_data["file"]
+        new_story.file_type = self.validated_data["file"].name.split(".")[-1].upper()
 
         new_story.save()
 

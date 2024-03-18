@@ -123,3 +123,4 @@ djangorestframework-camel-case
 pendulum
 Pillow==10.2.0
 factory-boy==3.3.0
+stripe==8.7.0

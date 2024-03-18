@@ -1,6 +1,5 @@
 from django.urls import path
 
-
 from app.views.auth_views import (
     LoginView,
     SignUpView,
@@ -14,7 +13,7 @@ from app.views.auth_views import (
     # TODO add delete account later
     # DeleteAccountView,
 )
-
+from app.views.download_views import GetStoryDetailsView, GetPaymentLinkView, StoryDownloadView
 from app.views.story_views import StoryView, SingleStoryView
 
 
@@ -45,4 +44,8 @@ urlpatterns = [
     ########################################### story paths ###################################
     path("stories/", StoryView.as_view(), name="story-views"),
     path("stories/<str:story_id>/", SingleStoryView.as_view(), name="single-story-views"),
+    ########################################### download paths ####################################
+    path("download/story-details/", GetStoryDetailsView.as_view(), name="get-story-details"),
+    path("download/payment-link/", GetPaymentLinkView.as_view(), name="get-payment-link"),
+    path("download/", StoryDownloadView.as_view(), name="story-download-view"),
 ]

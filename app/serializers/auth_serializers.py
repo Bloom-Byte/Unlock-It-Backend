@@ -313,7 +313,7 @@ class GoogleOAuthSerializer(serializers.Serializer):
         code = self.validated_data["code"]
         _ = self.validated_data.get("referral_code", None)
 
-        redirect_uri = "http://localhost:8000/api/v1/auth/signup/google/"
+        redirect_uri = settings.FRONTEND_GOOGLE_OAUTH_URL
 
         access_token, success = self.google_get_access_token(code=code, redirect_uri=redirect_uri)
 
@@ -407,7 +407,7 @@ class FaceBookOAuthSerializer(serializers.Serializer):
         code = self.validated_data["code"]
         _ = self.validated_data.get("referral_code", None)
 
-        redirect_uri = "http://localhost:8000/api/v1/auth/signup/facebook/"
+        redirect_uri = settings.FRONTEND_FACEBOOK_OAUTH_URL
 
         access_token, success = self.facebook_get_access_token(code=code, redirect_uri=redirect_uri)
 
@@ -475,6 +475,8 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             settings.FACEBOOK_ACCESS_TOKEN_OBTAIN_URL, params=query_params, timeout=60
         )
 
+        print(response.json())
+
         if not response.ok:
             return None, False
 
@@ -490,6 +492,8 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             params={"access_token": access_token},
             timeout=60,
         )
+
+        print(response.json())
 
         if not response.ok:
             return None, False

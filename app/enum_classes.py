@@ -105,3 +105,8 @@ class APIMessages:
     STORY_DELETED = "Story deleted successfully"
     STORY_NOT_FOUND = "Story not found"
     STORY_DELETION_ERROR = "Error when deleting story, please try again"
+    STORY_LINK_USAGE_EXCEEDED = "Download limit for the file have been exceeded"
+    STORY_DETAILS_ERROR = (
+        "Error while fetching details for the file, please check the link and try again"
+    )
+    PAYMENT_LINK_ERROR = "Error while generating payment link, please try again later"

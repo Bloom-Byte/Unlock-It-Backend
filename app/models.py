@@ -99,10 +99,23 @@ class Story(BaseModelClass):
     file_type = models.CharField(max_length=20, null=True, blank=True)
     reference_number = models.CharField(max_length=1024, null=True, blank=True)
 
+    @property
+    def can_still_download(self):
+        story_transactions: int = self.story_transactions.filter(
+            status=TransactionStatuses.SUCCESS
+        ).count()
+
+        if story_transactions >= self.usage_number:
+            return False
+
+        return True
+
 
 class Transaction(BaseModelClass):
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="transactions")
-    story = models.ForeignKey(Story, on_delete=models.SET_NULL, null=True, blank=True)
+    story = models.ForeignKey(
+        Story, on_delete=models.SET_NULL, null=True, blank=True, related_name="story_transactions"
+    )
 
     email = models.CharField(max_length=1024)
 
@@ -114,6 +127,8 @@ class Transaction(BaseModelClass):
     reference = models.CharField(max_length=1024)
 
     provider_reference = models.CharField(max_length=1024, null=True, blank=True)
+
+    file_downloaded = models.BooleanField(default=False)
 
     # for withdrawal
     account_number = models.CharField(max_length=10, null=True, blank=True)
