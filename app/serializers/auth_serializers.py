@@ -445,7 +445,7 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             user.account_status = AccountStatuses.ACTIVE
             user.referral_code = CodeGenerator.generate_referral_code()
             user.facebook_auth_token = access_token
-            user.profile_picture = user_data["picture"]
+            user.profile_picture = user_data["picture"]["data"]["url"]
             user.save()
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
@@ -475,8 +475,6 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             settings.FACEBOOK_ACCESS_TOKEN_OBTAIN_URL, params=query_params, timeout=60
         )
 
-        print(response.json())
-
         if not response.ok:
             return None, False
 
@@ -486,16 +484,24 @@ class FaceBookOAuthSerializer(serializers.Serializer):
 
     @classmethod
     def facebook_get_user_info(cls, *, access_token: str):
-        # TODO confirm this function
         response = requests.get(
             settings.FACEBOOK_PROFILE_ENDPOINT_URL,
             params={"access_token": access_token},
             timeout=60,
         )
 
-        print(response.json())
-
         if not response.ok:
             return None, False
 
-        return response.json(), True
+        user_id = response.json()["id"]
+
+        details_response = requests.get(
+            settings.FACEBOOK_PROFILE_DETAILS_URL.replace("USER-ID", user_id),
+            params={"access_token": access_token},
+            timeout=60,
+        )
+
+        if not details_response.ok:
+            return None, False
+
+        return details_response.json(), True

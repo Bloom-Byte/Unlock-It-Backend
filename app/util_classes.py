@@ -161,7 +161,6 @@ class EmailSender:
     @staticmethod
     def send_download_link_email(receiver, download_link):
         try:
-
             with open("emails/payment_completed.html") as f:
                 customer_template = f.read()
 
@@ -324,7 +323,6 @@ class OTPHelper:
 
 
 class EncryptionHelper:
-
     @classmethod
     def ensure_32_bytes(cls, key):
         hashed_key = sha256(key).digest()
@@ -357,7 +355,6 @@ class EncryptionHelper:
 
     @classmethod
     def decrypt_download_payload(cls, token: str):
-
         try:
             secret_key = settings.SECRET_KEY.encode()
 
@@ -388,10 +385,8 @@ class EncryptionHelper:
 
 
 class StripPaymentHelper:
-
     @staticmethod
     def generate_payment_link(data):
-
         # TODO check customer_email
 
         try:

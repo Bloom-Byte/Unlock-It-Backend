@@ -17,20 +17,17 @@ from app.serializers.download_serializers import GetStoryDetailsSerializer, GetP
 
 
 class GetStoryDetailsView(APIView):
-
     story_reference = openapi.Parameter(
         "storyReference", openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True
     )
 
     @swagger_auto_schema(manual_parameters=[story_reference])
     def get(self, request):
-
         story_reference = request.query_params.get("story_reference", None)
 
         story = GetStoryDetailsSerializer.validate_story_reference(story_reference=story_reference)
 
         if story is None:
-
             return APIResponses.error_response(
                 status_code=HTTP_404_NOT_FOUND,
                 message=APIMessages.STORY_DETAILS_ERROR,
@@ -44,14 +41,11 @@ class GetStoryDetailsView(APIView):
 
 
 class GetPaymentLinkView(APIView):
-
     @swagger_auto_schema(request_body=GetPaymentLinkSerializer)
     def post(self, request):
-
         form = GetPaymentLinkSerializer(data=request.data)
 
         if form.is_valid():
-
             # get the story
             story = form.get_story()
 
@@ -81,17 +75,13 @@ class GetPaymentLinkView(APIView):
 
 
 class StoryDownloadView(APIView):
-
     def get(self, request):
-
         token = request.query_params.get("token", None)
 
         if token:
-
             payload = EncryptionHelper.decrypt_download_payload(token=token)
 
             if payload:
-
                 # TODO replace this with transaction reference later on
                 _ = payload["transaction_reference"]
                 story_reference = payload["story_reference"]

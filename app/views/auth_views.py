@@ -34,7 +34,6 @@ from app.serializers.auth_serializers import (
 
 
 class LoginView(APIView):
-
     @swagger_auto_schema(
         request_body=LoginSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
     )
@@ -243,7 +242,6 @@ class DeleteAccountView(APIView):
 
 
 class ResetPasswordGenerateView(APIView):
-
     @swagger_auto_schema(
         request_body=ForgotPasswordFirstSerializer,
         responses=AuthResponseExamples.PASSWORD_RESET_FIRST_RESPONSE,
@@ -269,7 +267,6 @@ class ResetPasswordGenerateView(APIView):
 
 
 class ResetPasswordVerifyView(APIView):
-
     @swagger_auto_schema(
         request_body=ForgotPasswordSecondSerializer,
         responses=AuthResponseExamples.PASSWORD_RESET_SECOND_RESPONSE,
@@ -295,7 +292,6 @@ class ResetPasswordVerifyView(APIView):
 
 
 class ResetPasswordCompleteView(APIView):
-
     @swagger_auto_schema(
         request_body=ForgotPasswordThirdSerializer,
         responses=AuthResponseExamples.PASSWORD_RESET_THIRD_RESPONSE,

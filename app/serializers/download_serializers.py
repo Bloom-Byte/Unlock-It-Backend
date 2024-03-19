@@ -8,10 +8,8 @@ from app.serializers.story_serializers import StoryBriefDataSerializer
 
 
 class GetStoryDetailsSerializer:
-
     @staticmethod
     def validate_story_reference(story_reference: str):
-
         story_reference_split = story_reference.split("-")
 
         if len(story_reference_split) != 3:
@@ -28,7 +26,6 @@ class GetStoryDetailsSerializer:
 
     @staticmethod
     def get_story_details(story):
-
         data = StoryBriefDataSerializer(story).data
         data.pop("shareable_link")
 
@@ -50,11 +47,9 @@ class GetPaymentLinkSerializer(serializers.Serializer):
         return story
 
     def check_payment_generation(self, story: Story):
-
         return story.can_still_download
 
     def get_payment_link(self, story: Story):
-
         # TODO move this to webhook, and set the transaction reference instead of email
         payload = {
             "transaction_reference": "omo",

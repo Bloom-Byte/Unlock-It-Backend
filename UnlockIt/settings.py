@@ -310,6 +310,7 @@ FACEBOOK_OAUTH_CLIENT_ID = env.str("FACEBOOK_OAUTH_CLIENT_ID")
 FACEBOOK_OAUTH_CLIENT_SECRET = env.str("FACEBOOK_OAUTH_CLIENT_SECRET")
 FACEBOOK_ACCESS_TOKEN_OBTAIN_URL = "https://graph.facebook.com/v19.0/oauth/access_token"
 FACEBOOK_PROFILE_ENDPOINT_URL = "https://graph.facebook.com/me"
+FACEBOOK_PROFILE_DETAILS_URL = "https://graph.facebook.com/USER-ID?fields=id,name,email,picture"
 
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
