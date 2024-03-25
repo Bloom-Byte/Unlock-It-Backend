@@ -15,12 +15,8 @@ from drf_yasg.utils import swagger_auto_schema
 
 from app.util_classes import APIResponses
 from app.enum_classes import APIMessages
-from app.serializers.story_serializers import (
-    StorySerializer,
-    CreateStorySerializer,
-    StoryBriefDataSerializer,
-    serializers,
-)
+from app.serializers.story_serializers import StorySerializer, CreateStorySerializer
+from app.response_examples.story_examples import StoryResponseExamples
 
 
 class StoryView(APIView):
@@ -41,7 +37,7 @@ class StoryView(APIView):
     )
 
     @swagger_auto_schema(
-        responses={200: serializers.ListSerializer(child=StoryBriefDataSerializer())},
+        responses=StoryResponseExamples.GET_ALL_STORIES,
         manual_parameters=[search, page, page_size],
     )
     def get(self, request):
@@ -63,7 +59,7 @@ class StoryView(APIView):
 
     @swagger_auto_schema(
         request_body=CreateStorySerializer,
-        responses={201: StoryBriefDataSerializer()},
+        responses=StoryResponseExamples.CREATE_STORY,
     )
     def post(self, request):
         form = CreateStorySerializer(data=request.data)
@@ -83,6 +79,9 @@ class StoryView(APIView):
 class SingleStoryView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses=StoryResponseExamples.GET_SINGLE_STORY,
+    )
     def get(self, request, story_id):
         story_data = StorySerializer.get_single_story(
             user=request.user, story_id=story_id, return_data=True
@@ -97,6 +96,9 @@ class SingleStoryView(APIView):
             status_code=HTTP_404_NOT_FOUND, message=APIMessages.STORY_NOT_FOUND
         )
 
+    @swagger_auto_schema(
+        responses=StoryResponseExamples.DELETE_STORY,
+    )
     def delete(self, request, story_id):
         story_object = StorySerializer.get_single_story(
             user=request.user, story_id=story_id, return_data=False

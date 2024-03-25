@@ -19,6 +19,7 @@ from app.views.download_views import (
     StoryDownloadView,
     StripeWebhookView,
 )
+from app.views.referral_views import ReferralView
 from app.views.story_views import StoryView, SingleStoryView
 from app.views.transaction_views import TransactionView
 from app.views.wallet_views import WalletView
@@ -60,4 +61,6 @@ urlpatterns = [
     ############################################ transaction and wallet paths #############################
     path("transactions/", TransactionView.as_view(), name="transaction-view"),
     path("wallet/", WalletView.as_view(), name="wallet-view"),
+    ############################################ referral paths #############################
+    path("referral/", ReferralView.as_view(), name="referral-view"),
 ]

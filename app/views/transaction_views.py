@@ -12,11 +12,8 @@ from drf_yasg.utils import swagger_auto_schema
 
 from app.util_classes import APIResponses
 from app.enum_classes import APIMessages
-from app.serializers.transaction_serializers import (
-    serializers,
-    TransactionSerializer,
-    TransactionDataSerializer,
-)
+from app.serializers.transaction_serializers import TransactionSerializer
+from app.response_examples.transaction_examples import TransactionResponseExamples
 
 
 class TransactionView(APIView):
@@ -38,7 +35,7 @@ class TransactionView(APIView):
     )
 
     @swagger_auto_schema(
-        responses={200: serializers.ListSerializer(child=TransactionDataSerializer())},
+        responses=TransactionResponseExamples.GET_ALL_TRANSACTIONS,
         manual_parameters=[page, page_size],
     )
     def get(self, request):

@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 import stripe
 
 from app.models import CustomUser, Story, Transaction
+from app.response_examples.download_examples import DownloadResponseExamples
 from app.util_classes import APIResponses, EncryptionHelper, EmailSender
 from app.enum_classes import APIMessages, TransactionStatuses
 from app.serializers.download_serializers import GetStoryDetailsSerializer, GetPaymentLinkSerializer
@@ -25,7 +26,10 @@ class GetStoryDetailsView(APIView):
         "storyReference", openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True
     )
 
-    @swagger_auto_schema(manual_parameters=[story_reference])
+    @swagger_auto_schema(
+        manual_parameters=[story_reference],
+        responses=DownloadResponseExamples.STORY_DETAILS_RESPONSE,
+    )
     def get(self, request):
         story_reference = request.query_params.get("story_reference", None)
 
@@ -45,7 +49,11 @@ class GetStoryDetailsView(APIView):
 
 
 class GetPaymentLinkView(APIView):
-    @swagger_auto_schema(request_body=GetPaymentLinkSerializer)
+
+    @swagger_auto_schema(
+        request_body=GetPaymentLinkSerializer,
+        responses=DownloadResponseExamples.STORY_PAYMENT_LINK_RESPONSE,
+    )
     def post(self, request):
         form = GetPaymentLinkSerializer(data=request.data)
 
@@ -78,6 +86,9 @@ class GetPaymentLinkView(APIView):
 
 
 class StoryDownloadView(APIView):
+
+    swagger_schema = None
+
     def get(self, request):
         token = request.query_params.get("token", None)
 

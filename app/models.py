@@ -48,6 +48,7 @@ class CustomUser(AbstractUser, BaseModelClass):
     profile_picture = models.TextField(null=True, blank=True)
 
     referral_code = models.CharField(max_length=1024, null=True, blank=True)
+    referred_users = models.IntegerField(default=0)
 
     google_auth_token = models.TextField(null=True, blank=True)
     facebook_auth_token = models.TextField(null=True, blank=True)

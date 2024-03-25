@@ -66,6 +66,15 @@ class SignUpSerializer(serializers.Serializer):
 
         # TODO process the referral stuff here
 
+        # get referral user and update
+        referral_code = self.validated_data.get("referral_code", None)
+
+        if referral_code:
+            referral_user = CustomUser.objects.filter(referral_code=referral_code).first()
+            if referral_user:
+                referral_user.referred_users += 1
+                referral_user.save()
+
         # create stripe connected account
         StripePaymentHelper.create_customer_account(user_id=new_user.id)
 
@@ -314,7 +323,7 @@ class GoogleOAuthSerializer(serializers.Serializer):
 
     def process_google_oauth(self):
         code = self.validated_data["code"]
-        _ = self.validated_data.get("referral_code", None)
+        referral_code = self.validated_data.get("referral_code", None)
 
         redirect_uri = settings.FRONTEND_GOOGLE_OAUTH_URL
 
@@ -356,6 +365,12 @@ class GoogleOAuthSerializer(serializers.Serializer):
             new_user.save()
 
             # TODO add the referral stuff
+            # get referral user and update
+            if referral_code:
+                referral_user = CustomUser.objects.filter(referral_code=referral_code).first()
+                if referral_user:
+                    referral_user.referred_users += 1
+                    referral_user.save()
 
             # create stripe connected account
             StripePaymentHelper.create_customer_account(user_id=new_user.id)
@@ -411,7 +426,7 @@ class FaceBookOAuthSerializer(serializers.Serializer):
 
     def process_facebook_oauth(self):
         code = self.validated_data["code"]
-        _ = self.validated_data.get("referral_code", None)
+        referral_code = self.validated_data.get("referral_code", None)
 
         redirect_uri = settings.FRONTEND_FACEBOOK_OAUTH_URL
 
@@ -453,6 +468,12 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             new_user.save()
 
             # TODO add the referral stuff
+
+            if referral_code:
+                referral_user = CustomUser.objects.filter(referral_code=referral_code).first()
+                if referral_user:
+                    referral_user.referred_users += 1
+                    referral_user.save()
 
             # create stripe connected account
             StripePaymentHelper.create_customer_account(user_id=new_user.id)

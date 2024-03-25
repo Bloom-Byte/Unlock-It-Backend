@@ -3,6 +3,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
+    HTTP_201_CREATED,
 )
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -11,8 +12,8 @@ from rest_framework.parsers import FormParser, MultiPartParser
 
 from drf_yasg.utils import swagger_auto_schema
 
-
 from app.response_examples.auth_examples import AuthResponseExamples
+from app.response_examples.settings_examples import SettingsResponseExamples
 from app.util_classes import APIResponses
 from app.enum_classes import APIMessages
 from app.serializers.auth_serializers import (
@@ -61,7 +62,10 @@ class LoginView(APIView):
 
 
 class SignUpView(APIView):
-    @swagger_auto_schema(request_body=SignUpSerializer)
+
+    @swagger_auto_schema(
+        request_body=SignUpSerializer, responses=AuthResponseExamples.SIGN_UP_RESPONSE
+    )
     def post(self, request, *args, **kwargs):
         form = SignUpSerializer(data=request.data)
 
@@ -69,7 +73,7 @@ class SignUpView(APIView):
             data = form.create_account()
 
             return APIResponses.success_response(
-                status_code=HTTP_200_OK, message=APIMessages.ACCOUNT_CREATED, data=data
+                status_code=HTTP_201_CREATED, message=APIMessages.ACCOUNT_CREATED, data=data
             )
 
         return APIResponses.error_response(
@@ -80,31 +84,33 @@ class SignUpView(APIView):
 
 
 class GoogleSignUpView(APIView):
-    def get(self, request):
-        data = data = {
-            "code": request.query_params.get("code"),
-        }
+    # def get(self, request):
+    #     data = data = {
+    #         "code": request.query_params.get("code"),
+    #     }
 
-        referral_code = request.query_params.get("referral_code", None)
+    #     referral_code = request.query_params.get("referral_code", None)
 
-        if referral_code:
-            data["referral_code"] = referral_code
+    #     if referral_code:
+    #         data["referral_code"] = referral_code
 
-        form = GoogleOAuthSerializer(data=data)
+    #     form = GoogleOAuthSerializer(data=data)
 
-        if form.is_valid():
-            data, success = form.process_google_oauth()
+    #     if form.is_valid():
+    #         data, success = form.process_google_oauth()
 
-            if success:
-                return APIResponses.success_response(
-                    message=APIMessages.ACCOUNT_CREATED, status_code=201, data=data
-                )
+    #         if success:
+    #             return APIResponses.success_response(
+    #                 message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
+    #             )
 
-        return APIResponses.error_response(
-            status_code=HTTP_400_BAD_REQUEST, message=APIMessages.GOOGLE_OAUTH_ERROR
-        )
+    #     return APIResponses.error_response(
+    #         status_code=HTTP_400_BAD_REQUEST, message=APIMessages.GOOGLE_OAUTH_ERROR
+    #     )
 
-    @swagger_auto_schema(request_body=GoogleOAuthSerializer)
+    @swagger_auto_schema(
+        request_body=GoogleOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
+    )
     def post(self, request):
         form = GoogleOAuthSerializer(data=request.data)
 
@@ -113,7 +119,7 @@ class GoogleSignUpView(APIView):
 
             if success:
                 return APIResponses.success_response(
-                    message=APIMessages.ACCOUNT_CREATED, status_code=201, data=data
+                    message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
                 )
 
         return APIResponses.error_response(
@@ -122,31 +128,33 @@ class GoogleSignUpView(APIView):
 
 
 class FacebookSignUpView(APIView):
-    def get(self, request):
-        data = data = {
-            "code": request.query_params.get("code"),
-        }
+    # def get(self, request):
+    #     data = data = {
+    #         "code": request.query_params.get("code"),
+    #     }
 
-        referral_code = request.query_params.get("referral_code", None)
+    #     referral_code = request.query_params.get("referral_code", None)
 
-        if referral_code:
-            data["referral_code"] = referral_code
+    #     if referral_code:
+    #         data["referral_code"] = referral_code
 
-        form = FaceBookOAuthSerializer(data=data)
+    #     form = FaceBookOAuthSerializer(data=data)
 
-        if form.is_valid():
-            data, success = form.process_facebook_oauth()
+    #     if form.is_valid():
+    #         data, success = form.process_facebook_oauth()
 
-            if success:
-                return APIResponses.success_response(
-                    message=APIMessages.ACCOUNT_CREATED, status_code=201, data=data
-                )
+    #         if success:
+    #             return APIResponses.success_response(
+    #                 message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
+    #             )
 
-        return APIResponses.error_response(
-            status_code=HTTP_400_BAD_REQUEST, message=APIMessages.FACEBOOK_OAUTH_ERROR
-        )
+    #     return APIResponses.error_response(
+    #         status_code=HTTP_400_BAD_REQUEST, message=APIMessages.FACEBOOK_OAUTH_ERROR
+    #     )
 
-    @swagger_auto_schema(request_body=FaceBookOAuthSerializer)
+    @swagger_auto_schema(
+        request_body=FaceBookOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
+    )
     def post(self, request):
         form = FaceBookOAuthSerializer(data=request.data)
 
@@ -155,7 +163,7 @@ class FacebookSignUpView(APIView):
 
             if success:
                 return APIResponses.success_response(
-                    message=APIMessages.ACCOUNT_CREATED, status_code=201, data=data
+                    message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
                 )
 
         return APIResponses.error_response(
@@ -167,8 +175,10 @@ class FacebookSignUpView(APIView):
 
 
 class ProfileView(APIView):
-    permission_classes = [IsAuthenticated, FormParser, MultiPartParser]
+    permission_classes = [IsAuthenticated]
+    parser_classes = [FormParser, MultiPartParser]
 
+    @swagger_auto_schema(responses=SettingsResponseExamples.PROFILE_RESPONSE)
     def get(self, request, *args, **kwargs):
         data = ProfileSerializer.get_profile_details(user=request.user)
 
@@ -176,7 +186,9 @@ class ProfileView(APIView):
             message=APIMessages.SUCCESS, status_code=HTTP_200_OK, data=data
         )
 
-    @swagger_auto_schema(request_body=ProfileEditSerializer)
+    @swagger_auto_schema(
+        request_body=ProfileEditSerializer, responses=SettingsResponseExamples.PROFILE_EDIT_RESPONSE
+    )
     def patch(self, request, *args, **kwargs):
         form = ProfileEditSerializer(data=request.data, context={"user": request.user})
 
@@ -198,7 +210,10 @@ class ProfileView(APIView):
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(request_body=PasswordChangeSerializer)
+    @swagger_auto_schema(
+        request_body=PasswordChangeSerializer,
+        responses=SettingsResponseExamples.CHANGE_PASSWORD_RESPONSE,
+    )
     def post(self, request, *args, **kwargs):
         form = PasswordChangeSerializer(data=request.data, context={"user": request.user})
 
