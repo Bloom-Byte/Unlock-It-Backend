@@ -9,7 +9,7 @@ class AuthResponseExamples:
                 "application/json": {
                     "message": "Login successful",
                     "data": {
-                        "authToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+                        "authToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp",
                         "authTokenExp": "2024-04-17T19:42:11.864809Z",
                         "data": {
                             "id": "ac870942-efc2-42ca-bdc3-",

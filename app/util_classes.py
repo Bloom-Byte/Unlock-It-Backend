@@ -21,6 +21,8 @@ from cryptography.fernet import Fernet
 from django.core.paginator import Paginator
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+
 
 from rest_framework.response import Response
 
@@ -30,6 +32,7 @@ import stripe
 from app.enum_classes import OTPStatuses
 from app.models import OTP
 
+USER_MODEL = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -335,9 +338,6 @@ class EncryptionHelper:
         if len(secret_key) != 32:
             secret_key = cls.ensure_32_bytes(secret_key)
 
-        print(secret_key)
-        print(len(secret_key))
-
         fernet_key = urlsafe_b64encode(secret_key)
 
         # Initialize a Fernet cipher instance with the key
@@ -349,8 +349,6 @@ class EncryptionHelper:
         # Encrypt the JSON string
         encrypted_str = cipher_suite.encrypt(json_str.encode()).decode()
 
-        print("Encrypted data:", encrypted_str)
-
         return encrypted_str
 
     @classmethod
@@ -360,9 +358,6 @@ class EncryptionHelper:
 
             if len(secret_key) != 32:
                 secret_key = cls.ensure_32_bytes(secret_key)
-
-            print(secret_key)
-            print(len(secret_key))
 
             fernet_key = urlsafe_b64encode(secret_key)
 
@@ -374,37 +369,89 @@ class EncryptionHelper:
             # Convert the dictionary to a JSON string
             json_dict = json.loads(decrypted_data)
 
-            print("Decrypted data:", json_dict)
-
             return json_dict
 
         except Exception as error:
-            print(f"Error when decrypting the download token: {error}")
 
             return None
 
 
-class StripPaymentHelper:
+class StripePaymentHelper:
     @staticmethod
-    def generate_payment_link(data):
-        # TODO check customer_email
+    def generate_payment_link(data: dict):
 
         try:
-            checkout_session = stripe.checkout.Session.create(
-                idempotency_key=CodeGenerator.generate_transaction_reference(),
-                mode="payment",
-                success_url=settings.FRONTEND_PAYMENT_SUCCESS_URL,
-                cancel_url=settings.FRONTEND_PAYMENT_CANCEL_URL,
-                line_items=[
-                    {
-                        "price_data": {"currency": "NGN", "unit_amount": 100},
-                        "quantity": 1,
-                    },
-                ],
-            )
+            payment_intent = stripe.PaymentIntent.create(**data)
+
         except Exception as e:
-            return str(e)
+            print(f"Error when creating payment intent from stripe: {e}")
+            return None, False
 
-        payment_link = checkout_session.url
+        data = {"client_secret": payment_intent.client_secret}
 
-        return payment_link
+        return data, True
+
+    @staticmethod
+    def create_customer_account(user_id: str):
+        try:
+
+            user_account = USER_MODEL.objects.get(id=user_id)
+
+            customer = stripe.Customer.create(
+                name=user_account.username,
+                email=user_account.email,
+                description=f"Custom Account for user {str(user_id)}",
+            )
+
+            user_account.customer_id = customer["id"]
+            user_account.save()
+
+        except Exception as e:
+            print(f"Error when creating a new connected account: {e}")
+
+    @staticmethod
+    def create_bank_account(user_id: str, account_id: str, account_number: str, account_name: str):
+        try:
+            bank_account = stripe.Customer.create_source(
+                account_id,
+                source={
+                    "account_number": account_number,
+                    "country": "BR",
+                    "currency": "BRL",
+                    "object": "bank_account",
+                    "account_holder_name": account_name,
+                    "account_holder_type": "individual",
+                },
+            )
+
+            user_account = USER_MODEL.objects.get(id=user_id)
+
+            user_account.bank_account_id = bank_account["id"]
+            user_account.save()
+
+            print("Bank account created successfully successfully")
+
+        except Exception as e:
+            print(f"Error when creating bank account: {e}")
+
+    @staticmethod
+    def process_payout(amount, bank_account_id, transaction_id, transaction_reference):
+
+        print(bank_account_id)
+
+        try:
+
+            stripe.Payout.create(
+                amount=int(amount * 100),
+                currency="BRL",
+                description="Payout from UnlockIt",
+                destination=bank_account_id,
+                method="standard",
+                metadata={
+                    "transaction_id": transaction_id,
+                    "transaction_reference": transaction_reference,
+                },
+            )
+
+        except Exception as e:
+            print(f"Error when processing payout: {e}")

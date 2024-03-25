@@ -9,7 +9,7 @@ from app.validators import password_validator, email_not_exist_checker, email_ex
 from app.enum_classes import APIMessages, AccountStatuses, OTPChannels, OTPPurposes
 from app.api_authentication import MyAPIAuthentication
 from app.models import CustomUser
-from app.util_classes import CodeGenerator, OTPHelper, EmailSender
+from app.util_classes import CodeGenerator, OTPHelper, EmailSender, StripePaymentHelper
 
 
 ######################################## USER SERIALIZERS ############################################
@@ -65,6 +65,9 @@ class SignUpSerializer(serializers.Serializer):
         new_user.save()
 
         # TODO process the referral stuff here
+
+        # create stripe connected account
+        StripePaymentHelper.create_customer_account(user_id=new_user.id)
 
         # login successful
         auth_token, auth_exp = MyAPIAuthentication.get_access_token(
@@ -325,8 +328,6 @@ class GoogleOAuthSerializer(serializers.Serializer):
         if success is False:
             return None, False
 
-        # TODO add the referral stuff
-
         try:
             user = CustomUser.objects.get(email=user_data["email"].lower().strip())
 
@@ -345,25 +346,30 @@ class GoogleOAuthSerializer(serializers.Serializer):
             return data, True
 
         except CustomUser.DoesNotExist:
-            user = CustomUser()
-            user.username = user_data["name"].title()
-            user.email = user_data["email"].lower().strip()
-            user.account_status = AccountStatuses.ACTIVE
-            user.referral_code = CodeGenerator.generate_referral_code()
-            user.google_auth_token = access_token
-            user.profile_picture = user_data["picture"]
-            user.save()
+            new_user = CustomUser()
+            new_user.username = user_data["name"].title()
+            new_user.email = user_data["email"].lower().strip()
+            new_user.account_status = AccountStatuses.ACTIVE
+            new_user.referral_code = CodeGenerator.generate_referral_code()
+            new_user.google_auth_token = access_token
+            new_user.profile_picture = user_data["picture"]
+            new_user.save()
+
+            # TODO add the referral stuff
+
+            # create stripe connected account
+            StripePaymentHelper.create_customer_account(user_id=new_user.id)
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {
-                    "user_id": str(user.id),
+                    "user_id": str(new_user.id),
                 }
             )
 
             data = {
                 "auth_token": auth_token,
                 "auth_token_exp": auth_exp,
-                "data": ProfileDetailsSerializer(user).data,
+                "data": ProfileDetailsSerializer(new_user).data,
             }
 
             return data, True
@@ -419,8 +425,6 @@ class FaceBookOAuthSerializer(serializers.Serializer):
         if success is False:
             return None, False
 
-        # TODO add the referral stuff
-
         try:
             user = CustomUser.objects.get(email=user_data["email"].lower().strip())
 
@@ -439,25 +443,30 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             return data, True
 
         except CustomUser.DoesNotExist:
-            user = CustomUser()
-            user.username = user_data["name"].title()
-            user.email = user_data["email"].lower().strip()
-            user.account_status = AccountStatuses.ACTIVE
-            user.referral_code = CodeGenerator.generate_referral_code()
-            user.facebook_auth_token = access_token
-            user.profile_picture = user_data["picture"]["data"]["url"]
-            user.save()
+            new_user = CustomUser()
+            new_user.username = user_data["name"].title()
+            new_user.email = user_data["email"].lower().strip()
+            new_user.account_status = AccountStatuses.ACTIVE
+            new_user.referral_code = CodeGenerator.generate_referral_code()
+            new_user.facebook_auth_token = access_token
+            new_user.profile_picture = user_data["picture"]["data"]["url"]
+            new_user.save()
+
+            # TODO add the referral stuff
+
+            # create stripe connected account
+            StripePaymentHelper.create_customer_account(user_id=new_user.id)
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {
-                    "user_id": str(user.id),
+                    "user_id": str(new_user.id),
                 }
             )
 
             data = {
                 "auth_token": auth_token,
                 "auth_token_exp": auth_exp,
-                "data": ProfileDetailsSerializer(user).data,
+                "data": ProfileDetailsSerializer(new_user).data,
             }
 
             return data, True

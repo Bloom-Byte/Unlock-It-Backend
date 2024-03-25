@@ -13,8 +13,15 @@ from app.views.auth_views import (
     # TODO add delete account later
     # DeleteAccountView,
 )
-from app.views.download_views import GetStoryDetailsView, GetPaymentLinkView, StoryDownloadView
+from app.views.download_views import (
+    GetStoryDetailsView,
+    GetPaymentLinkView,
+    StoryDownloadView,
+    StripeWebhookView,
+)
 from app.views.story_views import StoryView, SingleStoryView
+from app.views.transaction_views import TransactionView
+from app.views.wallet_views import WalletView
 
 
 urlpatterns = [
@@ -48,4 +55,9 @@ urlpatterns = [
     path("download/story-details/", GetStoryDetailsView.as_view(), name="get-story-details"),
     path("download/payment-link/", GetPaymentLinkView.as_view(), name="get-payment-link"),
     path("download/", StoryDownloadView.as_view(), name="story-download-view"),
+    ############################################ webhook paths ####################################
+    path("webhook/stripe/", StripeWebhookView.as_view(), name="stripe-webhook-view"),
+    ############################################ transaction and wallet paths #############################
+    path("transactions/", TransactionView.as_view(), name="transaction-view"),
+    path("wallet/", WalletView.as_view(), name="wallet-view"),
 ]

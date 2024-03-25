@@ -72,7 +72,7 @@ class StorySerializer:
     @staticmethod
     def delete_story(story: Story):
         try:
-            # TODO delete the file from s3 here
+            # delete the file from s3 here
             story.file.delete()
             story.delete()
             return True

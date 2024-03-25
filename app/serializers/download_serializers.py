@@ -1,9 +1,7 @@
-from django.conf import settings
-
 from rest_framework import serializers
 
-from app.models import Story
-from app.util_classes import EmailSender, EncryptionHelper
+from app.models import Story, Transaction, TransactionStatuses, TransactionTypes
+from app.util_classes import CodeGenerator, StripePaymentHelper
 from app.serializers.story_serializers import StoryBriefDataSerializer
 
 
@@ -46,38 +44,34 @@ class GetPaymentLinkSerializer(serializers.Serializer):
 
         return story
 
-    def check_payment_generation(self, story: Story):
-        return story.can_still_download
-
     def get_payment_link(self, story: Story):
-        # TODO move this to webhook, and set the transaction reference instead of email
-        payload = {
-            "transaction_reference": "omo",
-            "story_reference": f"xxxxxx-{story.reference_number}",
+
+        new_transaction = Transaction()
+        new_transaction.story = story
+        new_transaction.owner = story.owner
+        new_transaction.email = self.validated_data["email"]
+        new_transaction.payable_amount = story.price
+        new_transaction.payment_type = TransactionTypes.PAYMENT
+        new_transaction.status = TransactionStatuses.PENDING
+        new_transaction.reference = CodeGenerator.generate_transaction_reference()
+        new_transaction.save()
+
+        data = {
+            "amount": int(story.price) * 100,
+            "currency": "brl",
+            "automatic_payment_methods": {"enabled": True},
+            # "confirm": True,
+            "description": f"Payment for {story.title}",
+            "receipt_email": self.validated_data["email"],
+            # "return_url": settings.FRONTEND_STRIPE_RETURN_URL,
+            "metadata": {"transaction_reference": new_transaction.reference},
+            # "payment_method_types": ["pix"],
         }
 
-        download_string = EncryptionHelper.encrypt_download_payload(payload=payload)
+        client_secret = StripePaymentHelper.generate_payment_link(data=data)
 
-        download_link = settings.BACKEND_DOWNLOAD_URL + f"={download_string}"
+        if client_secret[0]:
+            new_transaction.stripe_client_secret = client_secret[0]["client_secret"]
+            new_transaction.save()
 
-        EmailSender.send_download_link_email(
-            receiver=self.validated_data["email"], download_link=download_link
-        )
-
-        # payment_data = [
-        #     {
-        #         "quantity": 1,
-        #         "price_data": {
-        #             "currency": "BRL",
-        #             "unit_amount_decimal": story.price,
-        #             "product_data": {
-        #                 "description": f"Payment for {story.title}",
-        #                 "name": story.title,
-        #             },
-        #         },
-        #     },
-        # ]
-
-        # data = {"payment_link": StripPaymentHelper.generate_payment_link(payment_data)}
-
-        return "data"
+        return client_secret

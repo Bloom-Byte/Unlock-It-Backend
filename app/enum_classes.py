@@ -99,6 +99,7 @@ class APIMessages:
     TRANSACTION_SUCCESSFUL = "Transaction Successful"
     TRANSACTION_FAILED = "Transaction Failed"
     TRANSACTION_INITIALIZED = "Transaction initiated successfully"
+    TRANSACTION_PROCESSING = "Transaction Processing"
 
     STORY_CREATED = "Story created successfully"
     STORY_UPDATED = "Story updated successfully"
@@ -109,4 +110,6 @@ class APIMessages:
     STORY_DETAILS_ERROR = (
         "Error while fetching details for the file, please check the link and try again"
     )
-    PAYMENT_LINK_ERROR = "Error while generating payment link, please try again later"
+    PAYMENT_LINK_ERROR = "Error while initiating the payment, please try again later"
+    STRIPE_SIGNATURE_ERROR = "Stripe Signature Error"
+    PAYOUT_PROCESSING_STARTED = "Payout processing started"

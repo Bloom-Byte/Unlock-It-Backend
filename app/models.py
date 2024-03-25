@@ -53,6 +53,14 @@ class CustomUser(AbstractUser, BaseModelClass):
     facebook_auth_token = models.TextField(null=True, blank=True)
     facebook_user_id = models.CharField(max_length=1024, null=True, blank=True)
 
+    # stripe details
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    customer_id = models.CharField(max_length=2048, null=True, blank=True)
+    account_number = models.CharField(max_length=2048, null=True, blank=True)
+    account_name = models.CharField(max_length=2048, null=True, blank=True)
+    bank_name = models.CharField(max_length=2048, null=True, blank=True)
+    bank_account_id = models.CharField(max_length=2048, null=True, blank=True)
+
     def __str__(self):
         return str(self.username)
 
@@ -119,10 +127,18 @@ class Transaction(BaseModelClass):
 
     email = models.CharField(max_length=1024)
 
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    # this field will hold the amount that a customer will pay into the system
+    payable_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # this field will hold the amount the the user can take out from each transaction
+    withdrawable_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     payment_type = models.CharField(max_length=50, choices=TransactionTypes.choices)
     status = models.CharField(max_length=50, choices=TransactionStatuses.choices)
+
+    stripe_client_secret = models.CharField(max_length=2048, null=True, blank=True)
+
+    meta_data = models.JSONField(default=dict)
 
     reference = models.CharField(max_length=1024)
 
@@ -130,11 +146,11 @@ class Transaction(BaseModelClass):
 
     file_downloaded = models.BooleanField(default=False)
 
-    # for withdrawal
-    account_number = models.CharField(max_length=10, null=True, blank=True)
-    account_name = models.CharField(max_length=1024, null=True, blank=True)
-    bank_name = models.CharField(max_length=1024, null=True, blank=True)
-    bank_code = models.CharField(max_length=10, null=True, blank=True)
+    # withdrawal details
+    withdraw_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    withdraw_account_number = models.CharField(max_length=1024, null=True, blank=True)
+    withdraw_account_name = models.CharField(max_length=1024, null=True, blank=True)
+    withdraw_bank_name = models.CharField(max_length=1024, null=True, blank=True)
 
 
 class Referral(BaseModelClass):
@@ -144,7 +160,3 @@ class Referral(BaseModelClass):
     referred_user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="referred_me"
     )
-
-
-# TODO create model for story
-# TODO create model for download links, ties to transaction and add a boolean field
