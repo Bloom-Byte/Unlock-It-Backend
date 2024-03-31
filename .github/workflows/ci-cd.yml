@@ -56,7 +56,7 @@ jobs:
           echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
           echo "DEBUG=${{ secrets.DEBUG }}" >> .env
           echo "SHOW_DOCS=${{ secrets.SHOW_DOCS }}" >> .env
-          echo "GOOGLE_OAUTH2_CLIENT_ID=${}" >> .env
+          echo "GOOGLE_OAUTH2_CLIENT_ID=${GOOGLE}" >> .env
           echo "GOOGLE_OAUTH2_CLIENT_SECRET=${GOOGLE_OAUTH2_CLIENT_SECRET}" >> .env
           echo "FACEBOOK_OAUTH_CLIENT_ID=${FACEBOOK_OAUTH_CLIENT_ID}" >> .env
           echo "FACEBOOK_OAUTH_CLIENT_SECRET=${FACEBOOK_OAUTH_CLIENT_SECRET}" >> .env
@@ -73,7 +73,7 @@ jobs:
           echo "FRONTEND_DOWNLOAD_ERROR_URL=${FRONTEND_DOWNLOAD_ERROR_URL}" >> .env
           echo "EMAIL_HOST_USER=${EMAIL_HOST_USER}" >> .env
           echo "EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}" >> .env
-          echo "BACKEND_DOWNLOAD_URL=${}/api/v1/download/?token" >> .env
+          echo "BACKEND_DOWNLOAD_URL=${BACKEND_URL}/api/v1/download/?token" >> .env
           echo "GENERATE_CODE=${{ secrets.GENERATE_CODE }}" >> .env || true
 
     - name: Copy files to EC2 instance and deploy
