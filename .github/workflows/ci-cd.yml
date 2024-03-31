@@ -83,7 +83,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         source: .
-        target: ~/app || true
+        target: ~/app/ || true
 
     - name: SSH into EC2 instance, build Docker images, and deploy
       uses: appleboy/ssh-action@master
