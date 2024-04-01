@@ -157,12 +157,44 @@ class MyPagination:
 
 
 class EmailSender:
-    @staticmethod
-    def send_password_reset_email(receiver, otp):
-        pass
+    """
+    This class is a helper class for sending of emails.
+    """
 
     @staticmethod
-    def send_download_link_email(receiver, download_link):
+    def send_password_reset_email(receiver: str, otp: str):
+        try:
+            with open("emails/otp_email.html") as f:
+                customer_template = f.read()
+
+            customer_template = customer_template.replace("#code", otp)
+
+            # Create a multipart message and set headers
+            customer_message = MIMEMultipart()
+            customer_message["From"] = settings.EMAIL_HOST_USER
+            customer_message["To"] = receiver
+            customer_message["Subject"] = "Verification Code"
+
+            # Add body to email
+            customer_message.attach(MIMEText(customer_template, "html"))
+
+            # convert to string
+            customer_text = customer_message.as_string()
+
+            # Log in to server using secure context and send email
+            context = ssl.create_default_context()
+
+            with smtplib.SMTP_SSL(
+                settings.EMAIL_HOST, settings.EMAIL_PORT, context=context
+            ) as server:
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.sendmail(settings.EMAIL_HOST_USER, receiver, customer_text)
+
+        except Exception as error:
+            print(f"Error sending download email: {error}")
+
+    @staticmethod
+    def send_download_link_email(receiver: str, download_link: str):
         try:
             with open("emails/payment_completed.html") as f:
                 customer_template = f.read()
