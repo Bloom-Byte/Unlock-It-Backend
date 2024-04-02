@@ -2,6 +2,7 @@ from drf_yasg import openapi
 
 
 class TransactionResponseExamples:
+    """This class holds the response examples for the transaction endpoints"""
 
     GET_ALL_TRANSACTIONS = {
         "200": openapi.Response(

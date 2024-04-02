@@ -2,6 +2,7 @@ from drf_yasg import openapi
 
 
 class ReferralResponseExamples:
+    """This class holds the example response for the referral endpoints"""
 
     GET_REFERRAL_RESPONSE = {
         "200": openapi.Response(

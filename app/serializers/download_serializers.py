@@ -6,8 +6,19 @@ from app.serializers.story_serializers import StoryBriefDataSerializer
 
 
 class GetStoryDetailsSerializer:
+
     @staticmethod
-    def validate_story_reference(story_reference: str):
+    def validate_story_reference(story_reference: str) -> Story | None:
+        """
+        A function to validate the story reference provided as input.
+
+        Parameters:
+            story_reference (str): The story reference to be validated.
+
+        Returns:
+            Story | None: The validated story if found, else None.
+        """
+
         story_reference_split = story_reference.split("-")
 
         if len(story_reference_split) != 3:
@@ -23,7 +34,17 @@ class GetStoryDetailsSerializer:
         return story
 
     @staticmethod
-    def get_story_details(story):
+    def get_story_details(story) -> dict:
+        """
+        Returns a dictionary containing the story details after removing the "shareable_link" field.
+
+        Parameters:
+            story (Story): The story object from which to extract the details.
+
+        Returns:
+            dict: A dictionary containing the story details.
+        """
+
         data = StoryBriefDataSerializer(story).data
         data.pop("shareable_link")
 
@@ -31,10 +52,19 @@ class GetStoryDetailsSerializer:
 
 
 class GetPaymentLinkSerializer(serializers.Serializer):
+    """Serializer class for getting the payment link"""
+
     story_id = serializers.UUIDField()
     email = serializers.EmailField()
 
-    def get_story(self):
+    def get_story(self) -> Story | None:
+        """
+        Retrieves the story object based on the provided story ID.
+
+        Returns:
+            Story: The story object if found, or None if not found.
+        """
+
         story_id = self.validated_data["story_id"]
 
         story = Story.objects.filter(id=story_id).first()
@@ -45,6 +75,19 @@ class GetPaymentLinkSerializer(serializers.Serializer):
         return story
 
     def get_payment_link(self, story: Story):
+        """
+        Generates a payment link for a given story and saves a new transaction.
+
+        Args:
+            story (Story): The story for which the payment link is generated.
+
+        Returns:
+            tuple: A tuple containing the client secret of the generated payment link.
+                   The first element of the tuple is a dictionary with the following keys:
+                       - client_secret (str): The client secret of the payment link.
+
+                   If an error occurs during the generation of the payment link, an empty tuple is returned.
+        """
 
         new_transaction = Transaction()
         new_transaction.story = story

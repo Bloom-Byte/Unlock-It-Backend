@@ -14,6 +14,15 @@ class WalletSerializer:
 
     @staticmethod
     def get_wallet_details(user: CustomUser):
+        """
+        Get the wallet details for the specified user.
+
+        Args:
+            user (CustomUser): The user for whom the wallet details are to be retrieved.
+
+        Returns:
+            dict: A dictionary containing the wallet balance of the specified user.
+        """
         return WalletDataSerializer({"wallet_balance": user.wallet_balance}).data
 
 
@@ -24,6 +33,9 @@ class WalletWithdrawalSerializer(serializers.Serializer):
     bank_name = serializers.CharField()
 
     def process_withdrawal(self):
+        """
+        Process a withdrawal for the user, creating a withdrawal transaction and updating user account details if necessary.
+        """
 
         user: CustomUser = self.context.get("user")
 

@@ -66,6 +66,10 @@ class CustomUser(AbstractUser, BaseModelClass):
         return str(self.username)
 
     def get_available_balance(self):
+        """
+        Retrieve the available balance by calculating the total amount of successful payment transactions
+        and deducting the total amount of successful withdrawal transactions.
+        """
         debit_transactions = (
             self.transactions.filter(payment_type=TransactionTypes.WITHDRAWAL)
             .exclude(status=TransactionStatuses.FAILED)
@@ -110,6 +114,9 @@ class Story(BaseModelClass):
 
     @property
     def can_still_download(self):
+        """
+        A property that checks if the user can still download based on their story transactions and usage number.
+        """
         story_transactions: int = self.story_transactions.filter(
             status=TransactionStatuses.SUCCESS
         ).count()

@@ -2,6 +2,7 @@ from drf_yasg import openapi
 
 
 class StoryResponseExamples:
+    """This class holds the response examples for the story endpoints"""
 
     GET_ALL_STORIES = {
         "200": openapi.Response(
@@ -69,7 +70,7 @@ class StoryResponseExamples:
     }
 
     CREATE_STORY = {
-        "200": openapi.Response(
+        "201": openapi.Response(
             description="Success",
             examples={
                 "application/json": {

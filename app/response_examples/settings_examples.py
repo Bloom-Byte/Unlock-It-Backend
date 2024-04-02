@@ -2,6 +2,7 @@ from drf_yasg import openapi
 
 
 class SettingsResponseExamples:
+    """This class holds the response examples for the settings endpoints"""
 
     CHANGE_PASSWORD_RESPONSE = {
         "200": openapi.Response(
