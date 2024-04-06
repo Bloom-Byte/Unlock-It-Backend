@@ -11,7 +11,13 @@ from app.validators import password_validator, email_not_exist_checker, email_ex
 from app.enum_classes import APIMessages, AccountStatuses, OTPChannels, OTPPurposes
 from app.api_authentication import MyAPIAuthentication
 from app.models import CustomUser
-from app.util_classes import CodeGenerator, OTPHelper, EmailSender, StripePaymentHelper
+from app.util_classes import (
+    CodeGenerator,
+    OTPHelper,
+    EmailSender,
+    StripePaymentHelper,
+    FireBaseHelper,
+)
 
 
 ######################################## USER SERIALIZERS ############################################
@@ -491,7 +497,6 @@ class GoogleOAuthSerializer(serializers.Serializer):
             new_user.profile_picture = user_data["picture"]
             new_user.save()
 
-            # TODO add the referral stuff
             # get referral user and update
             if referral_code:
                 referral_user = CustomUser.objects.filter(referral_code=referral_code).first()
@@ -639,8 +644,6 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             new_user.profile_picture = user_data["picture"]["data"]["url"]
             new_user.save()
 
-            # TODO add the referral stuff
-
             if referral_code:
                 referral_user = CustomUser.objects.filter(referral_code=referral_code).first()
                 if referral_user:
@@ -728,3 +731,59 @@ class FaceBookOAuthSerializer(serializers.Serializer):
             return None, False
 
         return details_response.json(), True
+
+
+class FireBaseOauthSerializer(serializers.Serializer):
+    id_token = serializers.CharField()
+
+    def process_auth(self):
+
+        success, user_data = FireBaseHelper.Firebase_validation(self.validated_data["id_token"])
+
+        if success is False:
+            return None, False
+
+        try:
+            user = CustomUser.objects.get(email=user_data["email"].lower().strip())
+
+            auth_token, auth_exp = MyAPIAuthentication.get_access_token(
+                {
+                    "user_id": str(user.id),
+                }
+            )
+
+            data = {
+                "auth_token": auth_token,
+                "auth_token_exp": auth_exp,
+                "data": ProfileDetailsSerializer(user).data,
+            }
+
+            return data, True
+
+        except CustomUser.DoesNotExist:
+            new_user = CustomUser()
+            new_user.username = user_data["name"].title()
+            new_user.email = user_data["email"].lower().strip()
+            new_user.account_status = AccountStatuses.ACTIVE
+            new_user.referral_code = CodeGenerator.generate_referral_code()
+            new_user.firebase_access_token = self.validated_data["id_token"]
+            new_user.profile_picture = user_data["picture"]
+            new_user.save()
+
+            # TODO complete this
+            # create stripe connected account
+            # StripePaymentHelper.create_customer_account(user_id=new_user.id)
+
+            auth_token, auth_exp = MyAPIAuthentication.get_access_token(
+                {
+                    "user_id": str(new_user.id),
+                }
+            )
+
+            data = {
+                "auth_token": auth_token,
+                "auth_token_exp": auth_exp,
+                "data": ProfileDetailsSerializer(new_user).data,
+            }
+
+            return data, True

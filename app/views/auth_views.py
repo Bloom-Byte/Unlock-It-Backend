@@ -28,6 +28,7 @@ from app.serializers.auth_serializers import (
     ForgotPasswordSecondSerializer,
     GoogleOAuthSerializer,
     FaceBookOAuthSerializer,
+    FireBaseOauthSerializer,
 )
 
 
@@ -84,29 +85,6 @@ class SignUpView(APIView):
 
 
 class GoogleSignUpView(APIView):
-    # def get(self, request):
-    #     data = data = {
-    #         "code": request.query_params.get("code"),
-    #     }
-
-    #     referral_code = request.query_params.get("referral_code", None)
-
-    #     if referral_code:
-    #         data["referral_code"] = referral_code
-
-    #     form = GoogleOAuthSerializer(data=data)
-
-    #     if form.is_valid():
-    #         data, success = form.process_google_oauth()
-
-    #         if success:
-    #             return APIResponses.success_response(
-    #                 message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
-    #             )
-
-    #     return APIResponses.error_response(
-    #         status_code=HTTP_400_BAD_REQUEST, message=APIMessages.GOOGLE_OAUTH_ERROR
-    #     )
 
     @swagger_auto_schema(
         request_body=GoogleOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
@@ -128,29 +106,6 @@ class GoogleSignUpView(APIView):
 
 
 class FacebookSignUpView(APIView):
-    # def get(self, request):
-    #     data = data = {
-    #         "code": request.query_params.get("code"),
-    #     }
-
-    #     referral_code = request.query_params.get("referral_code", None)
-
-    #     if referral_code:
-    #         data["referral_code"] = referral_code
-
-    #     form = FaceBookOAuthSerializer(data=data)
-
-    #     if form.is_valid():
-    #         data, success = form.process_facebook_oauth()
-
-    #         if success:
-    #             return APIResponses.success_response(
-    #                 message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
-    #             )
-
-    #     return APIResponses.error_response(
-    #         status_code=HTTP_400_BAD_REQUEST, message=APIMessages.FACEBOOK_OAUTH_ERROR
-    #     )
 
     @swagger_auto_schema(
         request_body=FaceBookOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
@@ -160,6 +115,26 @@ class FacebookSignUpView(APIView):
 
         if form.is_valid():
             data, success = form.process_facebook_oauth()
+
+            if success:
+                return APIResponses.success_response(
+                    message=APIMessages.LOGIN_SUCCESS, status_code=HTTP_200_OK, data=data
+                )
+
+        return APIResponses.error_response(
+            status_code=HTTP_400_BAD_REQUEST, message=APIMessages.FACEBOOK_OAUTH_ERROR
+        )
+
+
+class FirebaseOauthView(APIView):
+
+    @swagger_auto_schema(request_body=FireBaseOauthSerializer)
+    def post(self, request):
+
+        form = FireBaseOauthSerializer(data=request.data)
+
+        if form.is_valid():
+            data, success = form.process_auth()
 
             if success:
                 return APIResponses.success_response(

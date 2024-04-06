@@ -53,6 +53,7 @@ class CustomUser(AbstractUser, BaseModelClass):
     google_auth_token = models.TextField(null=True, blank=True)
     facebook_auth_token = models.TextField(null=True, blank=True)
     facebook_user_id = models.CharField(max_length=1024, null=True, blank=True)
+    firebase_access_token = models.CharField(max_length=2048, null=True, blank=True)
 
     # stripe details
     wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)

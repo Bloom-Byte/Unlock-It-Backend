@@ -32,17 +32,24 @@ import stripe
 from app.enum_classes import OTPStatuses
 from app.models import OTP
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import auth
+
 USER_MODEL = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
+firebase_admin.initialize_app(cred)
 
 
 def snake_case_to_camel_case(value: str):
     """
     Convert a snake_case string to camelCase.
-    
+
     Args:
         value (str): The snake_case string to be converted.
-        
+
     Returns:
         str: The camelCase string.
     """
@@ -111,7 +118,7 @@ class APIResponses:
     @classmethod
     def server_error(cls, message: str, status_code):
         """
-        A class method that handles server errors. 
+        A class method that handles server errors.
         Takes in a message (str) and a status code, and returns a Response object.
         """
         context = {"message": message}
@@ -136,7 +143,7 @@ class CodeGenerator:
     @staticmethod
     def generate_transaction_reference():
         """
-        A static method that generates a transaction reference. 
+        A static method that generates a transaction reference.
         Returns a string of 14 characters consisting of 7 uppercase letters followed by 7 digits.
         """
         upper = choices(string.ascii_uppercase, k=7)
@@ -149,7 +156,7 @@ class CodeGenerator:
     def generate_referral_code():
         """
         Generates a random referral code consisting of 8 characters.
-        
+
         Returns:
             str: The generated referral code.
         """
@@ -182,14 +189,14 @@ class MyPagination:
     ):
         """
         A method to get a paginated response based on the request parameters.
-        
+
         Parameters:
             cls: The class itself.
             request: The HTTP request object.
             queryset: The queryset to paginate.
             page_size_param: The parameter name for page size (default is "page_size").
             page_number_param: The parameter name for page number (default is "page").
-        
+
         Returns:
             tuple: A tuple containing total data dictionary, current page object list, and an error message (if any).
         """
@@ -549,7 +556,7 @@ class EncryptionHelper:
             encrypted_payload = encrypt_download_payload(payload)
             print(encrypted_payload)
             # Output: 'gAAAAABd2Y5cQXc0Fk_x5DQ=='
-            """
+        """
         secret_key = settings.SECRET_KEY.encode()
 
         if len(secret_key) != 32:
@@ -719,8 +726,6 @@ class StripePaymentHelper:
             None
         """
 
-        
-
         try:
 
             stripe.Payout.create(
@@ -737,3 +742,51 @@ class StripePaymentHelper:
 
         except Exception as e:
             print(f"Error when processing payout: {e}")
+
+
+class FireBaseHelper:
+
+    @staticmethod
+    def Firebase_validation(id_token: str):
+        """
+        This function receives id token sent by Firebase and
+        validate the id token then check if the user exist on
+        Firebase or not if exist it returns True else False
+        """
+        try:
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token["uid"]
+            provider = decoded_token["firebase"]["sign_in_provider"]
+
+            image = None
+            name = None
+
+            if "name" in decoded_token:
+                name = decoded_token["name"]
+
+            if "picture" in decoded_token:
+                image = decoded_token["picture"]
+
+            try:
+                user = auth.get_user(uid)
+                if user:
+                    email = user.email
+                    data = {
+                        "uid": uid,
+                        "email": email,
+                        "name": name,
+                        "provider": provider,
+                        "picture": image,
+                    }
+
+                    return True, data
+
+                return False, None
+
+            except Exception as error:
+                print(f"Error when fetching user details for firebase oauth: {error}")
+                return False, None
+
+        except Exception as error2:
+            print(f"Error during the whole firebase oauth process: {error2}")
+            return False, None

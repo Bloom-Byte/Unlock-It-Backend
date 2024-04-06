@@ -15,10 +15,17 @@ from pathlib import Path
 import re
 
 from environs import Env
+import firebase_admin
+from firebase_admin import credentials
 
 
 env = Env()
 env.read_env()
+
+
+cred = credentials.Certificate(env.str("GOOGLE_APPLICATION_CREDENTIALS"))
+firebase_admin.initialize_app(cred)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -357,3 +364,5 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 465
 EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
+
+GOOGLE_APPLICATION_CREDENTIALS = env.str("GOOGLE_APPLICATION_CREDENTIALS")
