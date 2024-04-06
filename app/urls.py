@@ -10,6 +10,7 @@ from app.views.auth_views import (
     ResetPasswordCompleteView,
     GoogleSignUpView,
     FacebookSignUpView,
+    FirebaseOauthView,
     # TODO add delete account later
     # DeleteAccountView,
 )
@@ -31,6 +32,7 @@ urlpatterns = [
     path("auth/signup/", SignUpView.as_view(), name="sign-up-view"),
     path("auth/signup/google/", GoogleSignUpView.as_view(), name="google-sign-up-view"),
     path("auth/signup/facebook/", FacebookSignUpView.as_view(), name="facebook-sign-up-view"),
+    path("auth/signup/oauth/", FirebaseOauthView.as_view(), name="firebase-sign-up-view"),
     path(
         "auth/reset-password-first/",
         ResetPasswordGenerateView.as_view(),

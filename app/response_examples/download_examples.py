@@ -2,6 +2,7 @@ from drf_yasg import openapi
 
 
 class DownloadResponseExamples:
+    """This class holds the example response for the download endpoints"""
 
     STORY_DETAILS_RESPONSE = {
         "200": openapi.Response(

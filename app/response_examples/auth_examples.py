@@ -2,6 +2,8 @@ from drf_yasg import openapi
 
 
 class AuthResponseExamples:
+    """This class holds the example response for the auth endpoints"""
+
     LOGIN_RESPONSE = {
         "200": openapi.Response(
             description="Login Successful",

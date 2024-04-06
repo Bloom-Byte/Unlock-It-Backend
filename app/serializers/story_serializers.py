@@ -11,6 +11,8 @@ from app.util_classes import MyPagination, CodeGenerator
 
 
 class StoryBriefDataSerializer(serializers.ModelSerializer):
+    """Serializer class for returning the data for a particular story object"""
+
     author = serializers.CharField(source="owner.username")
 
     class Meta:
@@ -36,6 +38,16 @@ class StoryFullDataSerializer(serializers.ModelSerializer):
 class StorySerializer:
     @staticmethod
     def get_all_stories(user: CustomUser, request):
+        """
+        A method to retrieve all stories for a given user with optional search functionality.
+
+        Args:
+            user (CustomUser): The user for whom to retrieve stories.
+            request: The request object.
+
+        Returns:
+            tuple: A tuple containing a boolean indicating success, the retrieved data, and pagination data.
+        """
         search = request.query_params.get("search", None)
 
         stories = Story.objects.filter(owner=user)
@@ -58,6 +70,17 @@ class StorySerializer:
 
     @staticmethod
     def get_single_story(user: CustomUser, story_id: str, return_data: bool = True):
+        """
+        Retrieves a single story object based on the given story ID and user.
+
+        Parameters:
+            user (CustomUser): The user object associated with the story.
+            story_id (str): The ID of the story to retrieve.
+            return_data (bool, optional): Indicates whether to return the serialized data of the story. Defaults to True.
+
+        Returns:
+            Union[dict, Story, None]: If the story is found and return_data is True, returns the serialized data of the story as a dictionary. If return_data is False, returns the story object. If the story is not found, returns None.
+        """
         story = Story.objects.filter(id=story_id, owner=user).first()
 
         if story:
@@ -71,6 +94,15 @@ class StorySerializer:
 
     @staticmethod
     def delete_story(story: Story):
+        """
+        A static method to delete a story from s3 and the database.
+
+        Parameters:
+            story (Story): The story object to be deleted.
+
+        Returns:
+            bool: True if the story was successfully deleted, False otherwise.
+        """
         try:
             # delete the file from s3 here
             story.file.delete()
@@ -86,12 +118,26 @@ class StorySerializer:
 
 
 class CreateStorySerializer(serializers.Serializer):
+    """Serializer class for creating a new story"""
+
     title = serializers.CharField()
     file = serializers.FileField()
     price = serializers.FloatField()
     usage_number = serializers.IntegerField(min_value=1, max_value=100)
 
     def validate(self, attrs):
+        """
+        Validates the input data for the given attributes.
+
+        Args:
+            attrs (dict): The attributes to be validated.
+
+        Returns:
+            dict: The validated data.
+
+        Raises:
+            serializers.ValidationError: If the file size exceeds the maximum allowed size.
+        """
         data = super().validate(attrs)
 
         file = data["file"]
@@ -107,6 +153,15 @@ class CreateStorySerializer(serializers.Serializer):
         return data
 
     def create_story(self, user: CustomUser):
+        """
+        Creates a new story for the given user.
+
+        Args:
+            user (CustomUser): The user for whom the story is being created.
+
+        Returns:
+            dict: A dictionary containing the serialized data of the newly created story.
+        """
         new_story = Story()
         new_story.owner = user
         new_story.title = self.validated_data["title"]
