@@ -39,9 +39,6 @@ from firebase_admin import auth
 USER_MODEL = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
-firebase_admin.initialize_app(cred)
-
 
 def snake_case_to_camel_case(value: str):
     """
