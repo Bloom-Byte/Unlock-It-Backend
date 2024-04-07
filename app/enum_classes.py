@@ -112,4 +112,8 @@ class APIMessages:
     )
     PAYMENT_LINK_ERROR = "Error while initiating the payment, please try again later"
     STRIPE_SIGNATURE_ERROR = "Stripe Signature Error"
+    STRIPE_ACCOUNT_SETUP_ERROR = "Stripe Account Setup Error, please check back later"
+    STRIPE_ACCOUNT_SETUP_COMPLETED_ALREADY = "Stripe Account Setup Completed Already"
+    STRIPE_ACCOUNT_SETUP_NOT_COMPLETED = "Stripe Account Setup Not Completed"
+    STRIPE_ACCOUNT_LOGIN_ERROR = "Stripe Account Login Error, please try again later"
     PAYOUT_PROCESSING_STARTED = "Payout processing started"

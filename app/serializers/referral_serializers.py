@@ -2,7 +2,6 @@ from app.models import CustomUser
 
 
 class ReferralSerializer:
-
     @staticmethod
     def get_referral_details(user: CustomUser):
         """

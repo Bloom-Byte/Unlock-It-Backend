@@ -23,6 +23,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
+from firebase_admin import auth
 
 from rest_framework.response import Response
 
@@ -32,9 +33,6 @@ import stripe
 from app.enum_classes import OTPStatuses
 from app.models import OTP
 
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import auth
 
 USER_MODEL = get_user_model()
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -607,7 +605,38 @@ class EncryptionHelper:
             return None
 
 
-class StripePaymentHelper:
+class StripeHelper:
+    @staticmethod
+    def get_connected_account_login_link(connected_account_id: str):
+        try:
+            login_link = stripe.Account.create_login_link(connected_account_id)
+
+            print("Done creating login link for the user")
+
+            return True, {"login_link": login_link["url"]}
+
+        except Exception as e:
+            print(f"Error when creating login link: {e}")
+            return False, None
+
+    @staticmethod
+    def get_connected_account_balance(connected_account_id: str):
+        try:
+            account_balance = stripe.Balance.retrieve(stripe_account=connected_account_id)
+
+            data = {
+                "available": account_balance["available"][0]["amount"] / 100,
+                "pending": account_balance["pending"][0]["amount"] / 100,
+            }
+
+            print("Done fetching account balance for the user")
+
+            return True, data
+
+        except Exception as e:
+            print(f"Error when fetching account balance: {e}")
+            return False, None
+
     @staticmethod
     def generate_payment_link(data: dict):
         """
@@ -638,6 +667,108 @@ class StripePaymentHelper:
         return data, True
 
     @staticmethod
+    def generate_checkout_session_link(
+        line_items: list, connected_account_id: str, application_fee_amount: int
+    ):
+        try:
+            checkout = stripe.checkout.Session.create(
+                mode="payment",
+                line_items=line_items,
+                payment_intent_data={
+                    "application_fee_amount": application_fee_amount,
+                    "transfer_data": {"destination": connected_account_id},
+                },
+                success_url=settings.FRONTEND_PAYMENT_SUCCESS_URL,
+                cancel_url=settings.FRONTEND_PAYMENT_CANCEL_URL,
+            )
+
+            print("Done creating a checkout session")
+            return True, {"payment_link": checkout["url"]}
+
+        except Exception as e:
+            print(f"Error when creating a checkout session: {e}")
+            return False, None
+
+    @classmethod
+    def create_connected_account(cls, user_id: str):
+        try:
+            user_account = USER_MODEL.objects.get(id=user_id)
+
+            customer = stripe.Account.create(
+                type="express",
+                country="BR",
+                email=user_account.email,
+                capabilities={
+                    "card_payments": {"requested": True},
+                    "transfers": {"requested": True},
+                },
+            )
+
+            user_account.customer_id = customer["id"]
+            user_account.save()
+
+            print("Done creating a connected account for the new user")
+            return True
+
+        except Exception as e:
+            print(f"Error when creating a new connected account: {e}")
+            return False
+
+    @classmethod
+    def get_connected_account(cls, user_id: str):
+        try:
+            user_account = USER_MODEL.objects.get(id=user_id)
+
+            connected_account = stripe.Account.retrieve(user_account.customer_id)
+
+            print(connected_account)
+
+            user_account.stripe_setup_complete = connected_account["charges_enabled"]
+            user_account.save()
+
+            print("Done fetching a connected account for the user")
+
+        except Exception as e:
+            print(f"Error when fetching a connected account: {e}")
+
+    @classmethod
+    def create_connected_account_onboarding_link(cls, user_id: str):
+        try:
+            user_account = USER_MODEL.objects.get(id=user_id)
+
+            if user_account.customer_id is None:
+                account_success = cls.create_connected_account(user_id)
+
+                if not account_success:
+                    return False, None
+
+            # encrypt the user id here
+            payload = {"user_id": user_id}
+            encrypted_auth_token = EncryptionHelper.encrypt_download_payload(payload=payload)
+
+            refresh_url = (
+                settings.BACKEND_BASE_URL
+                + "api/v1/settings/profile/stripe-setup/refresh/?token="
+                + encrypted_auth_token
+            )
+
+            print(refresh_url)
+
+            account_link = stripe.AccountLink.create(
+                account=user_account.customer_id,
+                refresh_url=refresh_url,
+                return_url=settings.FRONTEND_STRIPE_ACCOUNT_SETUP_RETURN_URL,
+                type="account_onboarding",
+            )
+
+            print("Done creating a new account link for the user")
+            return True, {"account_link": account_link["url"]}
+
+        except Exception as e:
+            print(f"Error when creating a new account link: {e}")
+            return False, None
+
+    @staticmethod
     def create_customer_account(user_id: str):
         """
         Create a customer account for a given user ID.
@@ -649,7 +780,6 @@ class StripePaymentHelper:
             None
         """
         try:
-
             user_account = USER_MODEL.objects.get(id=user_id)
 
             customer = stripe.Customer.create(
@@ -724,7 +854,6 @@ class StripePaymentHelper:
         """
 
         try:
-
             stripe.Payout.create(
                 amount=int(amount * 100),
                 currency="BRL",
@@ -742,7 +871,6 @@ class StripePaymentHelper:
 
 
 class FireBaseHelper:
-
     @staticmethod
     def Firebase_validation(id_token: str):
         """

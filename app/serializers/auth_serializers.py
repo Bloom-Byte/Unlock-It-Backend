@@ -15,8 +15,9 @@ from app.util_classes import (
     CodeGenerator,
     OTPHelper,
     EmailSender,
-    StripePaymentHelper,
+    StripeHelper,
     FireBaseHelper,
+    EncryptionHelper,
 )
 
 
@@ -28,7 +29,7 @@ class ProfileDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ["id", "username", "email", "profile_picture"]
+        fields = ["id", "username", "email", "profile_picture", "stripe_setup_complete"]
 
 
 class ProfileSerializer:
@@ -46,6 +47,26 @@ class ProfileSerializer:
             dict: A dictionary containing the serialized profile details of the user.
         """
         return ProfileDetailsSerializer(user).data
+
+    @staticmethod
+    def complete_stripe_setup(user: CustomUser):
+        data = StripeHelper.create_connected_account_onboarding_link(user_id=str(user.id))
+        return data
+
+    @staticmethod
+    def get_connected_account_login_link(user: CustomUser):
+        data = StripeHelper.get_connected_account_login_link(connected_account_id=user.customer_id)
+        return data
+
+    @staticmethod
+    def refresh_stripe_onboarding_link(token: str):
+        decrypted_data = EncryptionHelper.decrypt_download_payload(token=token)
+
+        _, data = StripeHelper.create_connected_account_onboarding_link(
+            user_id=decrypted_data["user_id"]
+        )
+
+        return data["account_link"]
 
 
 ################################################ Sign Up / Login Serializer ###########################################
@@ -106,7 +127,7 @@ class SignUpSerializer(serializers.Serializer):
                 referral_user.save()
 
         # create stripe connected account
-        StripePaymentHelper.create_customer_account(user_id=new_user.id)
+        StripeHelper.create_connected_account(user_id=new_user.id)
 
         # login successful
         auth_token, auth_exp = MyAPIAuthentication.get_access_token(
@@ -169,6 +190,11 @@ class LoginSerializer(serializers.Serializer):
                 return None, APIMessages.ACCOUNT_PENDING
 
             # login successful
+
+            # check the account setup on stripe, and update if needed
+            StripeHelper.get_connected_account(user_id=user.id)
+            user.refresh_from_db()
+
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {
                     "user_id": str(user.id),
@@ -505,7 +531,7 @@ class GoogleOAuthSerializer(serializers.Serializer):
                     referral_user.save()
 
             # create stripe connected account
-            StripePaymentHelper.create_customer_account(user_id=new_user.id)
+            StripeHelper.create_customer_account(user_id=new_user.id)
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {
@@ -651,7 +677,7 @@ class FaceBookOAuthSerializer(serializers.Serializer):
                     referral_user.save()
 
             # create stripe connected account
-            StripePaymentHelper.create_customer_account(user_id=new_user.id)
+            StripeHelper.create_customer_account(user_id=new_user.id)
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {
@@ -737,7 +763,6 @@ class FireBaseOauthSerializer(serializers.Serializer):
     id_token = serializers.CharField()
 
     def process_auth(self):
-
         success, user_data = FireBaseHelper.Firebase_validation(self.validated_data["id_token"])
 
         if success is False:
@@ -770,9 +795,8 @@ class FireBaseOauthSerializer(serializers.Serializer):
             new_user.profile_picture = user_data["picture"]
             new_user.save()
 
-            # TODO complete this
             # create stripe connected account
-            # StripePaymentHelper.create_customer_account(user_id=new_user.id)
+            StripeHelper.create_connected_account(user_id=new_user.id)
 
             auth_token, auth_exp = MyAPIAuthentication.get_access_token(
                 {

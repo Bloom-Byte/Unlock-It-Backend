@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_yasg import openapi
 
 
@@ -85,6 +86,28 @@ class StoryResponseExamples:
                         "createdAt": "2024-03-25T11:33:55.422336Z",
                         "shareableLink": "http://localhost:8000/xxxxxx-RN-l6733Vai",
                     },
+                }
+            },
+        ),
+        "400": openapi.Response(
+            description="Failure",
+            examples={
+                "application/json": {
+                    "message": "One or more validation(s) failed",
+                    "errors": [
+                        {
+                            "fieldName": "file",
+                            "error": f"Maximum file size of {settings.FILE_UPLOAD_MAX_SIZE_MB} MB exceeded",
+                        }
+                    ],
+                }
+            },
+        ),
+        "403": openapi.Response(
+            description="Stripe setup not completed",
+            examples={
+                "application/json": {
+                    "message": "Stripe Account Setup Not Completed",
                 }
             },
         ),
