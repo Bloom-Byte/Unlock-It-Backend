@@ -49,7 +49,6 @@ class GetStoryDetailsView(APIView):
 
 
 class GetPaymentLinkView(APIView):
-
     @swagger_auto_schema(
         request_body=GetPaymentLinkSerializer,
         responses=DownloadResponseExamples.STORY_PAYMENT_LINK_RESPONSE,
@@ -73,7 +72,7 @@ class GetPaymentLinkView(APIView):
                 )
 
             # generate the actual payment link
-            data, success = form.get_payment_link(story=story)
+            success, data = form.get_payment_link(story=story)
 
             if success:
                 return APIResponses.success_response(
@@ -86,7 +85,6 @@ class GetPaymentLinkView(APIView):
 
 
 class StoryDownloadView(APIView):
-
     swagger_schema = None
 
     def get(self, request):
@@ -119,7 +117,6 @@ class StoryDownloadView(APIView):
                 response = requests.get(story.file.url, timeout=None)
 
                 if response.status_code == 200:
-
                     # mark the file as downloaded in transaction model
                     transaction_object.file_downloaded = True
                     transaction_object.save()
@@ -142,11 +139,9 @@ class StoryDownloadView(APIView):
 
 
 class StripeWebhookView(APIView):
-
     swagger_schema = None
 
     def post(self, request):
-
         event = request.data
 
         # TODO handle payout webhook
@@ -155,7 +150,6 @@ class StripeWebhookView(APIView):
 
         # handle payment intent webhook
         if event["data"]["object"]["object"] == "payment_intent":
-
             try:
                 payment_id = event["data"]["object"]["id"]
 
@@ -190,7 +184,6 @@ class StripeWebhookView(APIView):
             # update the transaction details
 
             if status == "succeeded":
-
                 user: CustomUser = transaction.owner
 
                 # TODO do the system share calculation here

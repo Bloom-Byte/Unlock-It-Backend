@@ -17,7 +17,6 @@ class TransactionDataSerializer(serializers.ModelSerializer):
 
 
 class TransactionSerializer:
-
     @staticmethod
     def get_user_transactions(request) -> Tuple[bool, List[Dict], Dict]:
         """

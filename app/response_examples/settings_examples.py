@@ -33,6 +33,7 @@ class SettingsResponseExamples:
                         "username": "String",
                         "email": "user@example.com",
                         "profilePicture": None,
+                        "stripeSetupComplete": False,
                     },
                 }
             },
@@ -50,6 +51,7 @@ class SettingsResponseExamples:
                         "username": "String",
                         "email": "user@example.com",
                         "profilePicture": None,
+                        "stripeSetupComplete": False,
                     },
                 }
             },
@@ -60,6 +62,42 @@ class SettingsResponseExamples:
                 "application/json": {
                     "message": "One or more validation(s) failed",
                     "errors": [{"fieldName": "email", "error": "Enter a valid email address."}],
+                }
+            },
+        ),
+    }
+
+    STRIPE_SETUP_RESPONSE = {
+        "200": openapi.Response(
+            description="Success",
+            examples={
+                "application/json": {
+                    "message": "Operation completed successfully",
+                    "data": {
+                        "accountLink": "https://connect.stripe.com/setup/e/acct_1P2pnO07FMBQsnSl/pv5JZpy6ANR8"
+                    },
+                }
+            },
+        ),
+        "400": openapi.Response(
+            description="Setup Completed Already",
+            examples={
+                "application/json": {
+                    "message": "Stripe Account Setup Completed Already.",
+                }
+            },
+        ),
+    }
+
+    STRIPE_EXPRESS_ACCOUNT_LOGIN_RESPONSE = {
+        "200": openapi.Response(
+            description="Success",
+            examples={
+                "application/json": {
+                    "message": "Operation completed successfully",
+                    "data": {
+                        "loginLink": "https://connect.stripe.com/express/acct_1P2ZhTP83XYAyrzG/HzsUHK0ANABY"
+                    },
                 }
             },
         ),

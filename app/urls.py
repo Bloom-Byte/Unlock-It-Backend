@@ -11,6 +11,9 @@ from app.views.auth_views import (
     GoogleSignUpView,
     FacebookSignUpView,
     FirebaseOauthView,
+    ProfileStripeSetupView,
+    ProfileStripeExpressLoginView,
+    ProfileStripeSetupRefreshView,
     # TODO add delete account later
     # DeleteAccountView,
 )
@@ -50,6 +53,21 @@ urlpatterns = [
     ),
     ########################################## settings paths #####################################3
     path("settings/profile/", ProfileView.as_view(), name="profile-view"),
+    path(
+        "settings/profile/stripe-setup/",
+        ProfileStripeSetupView.as_view(),
+        name="profile-stripe-setup-view",
+    ),
+    path(
+        "settings/profile/stripe-setup/refresh/",
+        ProfileStripeSetupRefreshView.as_view(),
+        name="profile-stripe-setup-refresh-view",
+    ),
+    path(
+        "settings/profile/stripe-login/",
+        ProfileStripeExpressLoginView.as_view(),
+        name="profile-stripe-login-view",
+    ),
     path("settings/change-password/", ChangePasswordView.as_view(), name="change-password-view"),
     ########################################### story paths ###################################
     path("stories/", StoryView.as_view(), name="story-views"),

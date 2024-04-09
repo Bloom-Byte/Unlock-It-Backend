@@ -17,7 +17,6 @@ class WalletView(APIView):
 
     @swagger_auto_schema(responses=WalletResponseExamples.GET_WALLET_RESPONSE)
     def get(self, request):
-
         data = WalletSerializer.get_wallet_details(user=request.user)
 
         return APIResponses.success_response(

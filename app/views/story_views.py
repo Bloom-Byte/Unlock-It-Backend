@@ -3,6 +3,7 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_201_CREATED,
     HTTP_404_NOT_FOUND,
+    HTTP_403_FORBIDDEN,
 )
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -62,6 +63,12 @@ class StoryView(APIView):
         responses=StoryResponseExamples.CREATE_STORY,
     )
     def post(self, request):
+        if not request.user.stripe_setup_complete:
+            return APIResponses.error_response(
+                status_code=HTTP_403_FORBIDDEN,
+                message=APIMessages.STRIPE_ACCOUNT_SETUP_NOT_COMPLETED,
+            )
+
         form = CreateStorySerializer(data=request.data)
 
         if form.is_valid():

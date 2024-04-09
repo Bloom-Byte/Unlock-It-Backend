@@ -1,12 +1,13 @@
+from django.conf import settings
+
 from rest_framework import serializers
 
 from app.models import Story, Transaction, TransactionStatuses, TransactionTypes
-from app.util_classes import CodeGenerator, StripePaymentHelper
+from app.util_classes import CodeGenerator, StripeHelper
 from app.serializers.story_serializers import StoryBriefDataSerializer
 
 
 class GetStoryDetailsSerializer:
-
     @staticmethod
     def validate_story_reference(story_reference: str) -> Story | None:
         """
@@ -76,17 +77,13 @@ class GetPaymentLinkSerializer(serializers.Serializer):
 
     def get_payment_link(self, story: Story):
         """
-        Generates a payment link for a given story and saves a new transaction.
+        Generate a payment link for a given story.
 
-        Args:
-            story (Story): The story for which the payment link is generated.
+        Parameters:
+        - story: Story object
 
         Returns:
-            tuple: A tuple containing the client secret of the generated payment link.
-                   The first element of the tuple is a dictionary with the following keys:
-                       - client_secret (str): The client secret of the payment link.
-
-                   If an error occurs during the generation of the payment link, an empty tuple is returned.
+        - data: dict containing the generated checkout session link
         """
 
         new_transaction = Transaction()
@@ -99,22 +96,47 @@ class GetPaymentLinkSerializer(serializers.Serializer):
         new_transaction.reference = CodeGenerator.generate_transaction_reference()
         new_transaction.save()
 
-        data = {
-            "amount": int(story.price) * 100,
-            "currency": "brl",
-            "automatic_payment_methods": {"enabled": True},
-            # "confirm": True,
-            "description": f"Payment for {story.title}",
-            "receipt_email": self.validated_data["email"],
-            # "return_url": settings.FRONTEND_STRIPE_RETURN_URL,
-            "metadata": {"transaction_reference": new_transaction.reference},
-            # "payment_method_types": ["pix"],
-        }
+        # construct the line items data
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "brl",
+                    "product_data": {
+                        "name": story.title,
+                        "description": f"Payment for {story.title}",
+                    },
+                    "unit_amount": int(story.price) * 100,
+                },
+                "quantity": 1,
+            }
+        ]
 
-        client_secret = StripePaymentHelper.generate_payment_link(data=data)
+        # calculate the application fee
+        application_fee_amount = (
+            int(int(story.price) * settings.STRIPE_APPLICATION_FEE_PERCENTAGE) * 100
+        )
 
-        if client_secret[0]:
-            new_transaction.stripe_client_secret = client_secret[0]["client_secret"]
-            new_transaction.save()
+        # get connected account id
+        connect_account_id = story.owner.customer_id
 
-        return client_secret
+        data = StripeHelper.generate_checkout_session_link(
+            line_items=line_items,
+            connected_account_id=connect_account_id,
+            application_fee_amount=application_fee_amount,
+        )
+
+        # data = {
+        #     "amount": int(story.price) * 100,
+        #     "currency": "brl",
+        #     "automatic_payment_methods": {"enabled": True},
+        #     # "confirm": True,
+        #     "description": f"Payment for {story.title}",
+        #     "receipt_email": self.validated_data["email"],
+        #     # "return_url": settings.FRONTEND_STRIPE_RETURN_URL,
+        #     "metadata": {"transaction_reference": new_transaction.reference},
+        #     # "payment_method_types": ["pix"],
+        # }
+
+        # client_secret = StripeHelper.generate_payment_link(data=data)
+
+        return data

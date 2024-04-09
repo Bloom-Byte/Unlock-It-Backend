@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from app.enum_classes import TransactionStatuses, TransactionTypes
 from app.models import CustomUser, Transaction
-from app.util_classes import CodeGenerator, StripePaymentHelper
+from app.util_classes import CodeGenerator, StripeHelper
 
 
 class WalletDataSerializer(serializers.Serializer):
@@ -11,7 +11,6 @@ class WalletDataSerializer(serializers.Serializer):
 
 
 class WalletSerializer:
-
     @staticmethod
     def get_wallet_details(user: CustomUser):
         """
@@ -23,7 +22,9 @@ class WalletSerializer:
         Returns:
             dict: A dictionary containing the wallet balance of the specified user.
         """
-        return WalletDataSerializer({"wallet_balance": user.wallet_balance}).data
+        _, data = StripeHelper.get_connected_account_balance(connected_account_id=user.customer_id)
+        # return WalletDataSerializer({"wallet_balance": user.wallet_balance}).data
+        return data
 
 
 class WalletWithdrawalSerializer(serializers.Serializer):
@@ -70,7 +71,7 @@ class WalletWithdrawalSerializer(serializers.Serializer):
             user.bank_name = bank_name
             user.save()
 
-            StripePaymentHelper.create_bank_account(
+            StripeHelper.create_bank_account(
                 user_id=user.id,
                 account_id=user.customer_id,
                 account_number=account_number,
@@ -78,7 +79,7 @@ class WalletWithdrawalSerializer(serializers.Serializer):
             )
 
         # start the payout processing
-        StripePaymentHelper.process_payout(
+        StripeHelper.process_payout(
             amount=withdrawal_transaction.withdraw_amount,
             bank_account_id=user.bank_account_id,
             transaction_id=withdrawal_transaction.id,

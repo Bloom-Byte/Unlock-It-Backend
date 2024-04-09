@@ -38,11 +38,16 @@ class DownloadResponseExamples:
             examples={
                 "application/json": {
                     "message": "Operation completed successfully",
-                    "data": {"clientSecret": "pi_3OyBZD05q9YvYsJf0PlPd2J3_secret_"},
+                    "data": {"paymentLink": "https://checkout.stripe.com/c/pay/cs_testl"},
                 }
             },
         ),
         "400": openapi.Response(
-            description="Failure", examples={"application/json": {"message": "Story not found"}}
+            description="Failure",
+            examples={
+                "application/json": {
+                    "message": "Story not found",
+                }
+            },
         ),
     }

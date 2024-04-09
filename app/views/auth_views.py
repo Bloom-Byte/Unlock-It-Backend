@@ -1,3 +1,4 @@
+from django.http import HttpResponseRedirect
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -63,7 +64,6 @@ class LoginView(APIView):
 
 
 class SignUpView(APIView):
-
     @swagger_auto_schema(
         request_body=SignUpSerializer, responses=AuthResponseExamples.SIGN_UP_RESPONSE
     )
@@ -85,7 +85,6 @@ class SignUpView(APIView):
 
 
 class GoogleSignUpView(APIView):
-
     @swagger_auto_schema(
         request_body=GoogleOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
     )
@@ -106,7 +105,6 @@ class GoogleSignUpView(APIView):
 
 
 class FacebookSignUpView(APIView):
-
     @swagger_auto_schema(
         request_body=FaceBookOAuthSerializer, responses=AuthResponseExamples.LOGIN_RESPONSE
     )
@@ -127,10 +125,8 @@ class FacebookSignUpView(APIView):
 
 
 class FirebaseOauthView(APIView):
-
     @swagger_auto_schema(request_body=FireBaseOauthSerializer)
     def post(self, request):
-
         form = FireBaseOauthSerializer(data=request.data)
 
         if form.is_valid():
@@ -176,6 +172,63 @@ class ProfileView(APIView):
 
         return APIResponses.error_response(
             status_code=HTTP_400_BAD_REQUEST, message=APIMessages.FORM_ERROR, errors=form.errors
+        )
+
+
+class ProfileStripeSetupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(responses=SettingsResponseExamples.STRIPE_SETUP_RESPONSE)
+    def get(self, request, *args, **kwargs):
+        if request.user.stripe_setup_complete:
+            return APIResponses.error_response(
+                status_code=HTTP_400_BAD_REQUEST,
+                message=APIMessages.STRIPE_ACCOUNT_SETUP_COMPLETED_ALREADY,
+            )
+
+        success, data = ProfileSerializer.complete_stripe_setup(user=request.user)
+
+        if success:
+            return APIResponses.success_response(
+                message=APIMessages.SUCCESS, status_code=HTTP_200_OK, data=data
+            )
+
+        return APIResponses.error_response(
+            status_code=HTTP_400_BAD_REQUEST, message=APIMessages.STRIPE_ACCOUNT_SETUP_ERROR
+        )
+
+
+class ProfileStripeSetupRefreshView(APIView):
+    """This endpoint is not to be used by the frontend"""
+
+    def get(self, request):
+        token = request.query_params.get("token")
+
+        redirect_link = ProfileSerializer.refresh_stripe_onboarding_link(token=token)
+
+        return HttpResponseRedirect(redirect_link)
+
+
+class ProfileStripeExpressLoginView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(responses=SettingsResponseExamples.STRIPE_EXPRESS_ACCOUNT_LOGIN_RESPONSE)
+    def get(self, request, *args, **kwargs):
+        if not request.user.stripe_setup_complete:
+            return APIResponses.error_response(
+                status_code=HTTP_400_BAD_REQUEST,
+                message=APIMessages.STRIPE_ACCOUNT_SETUP_NOT_COMPLETED,
+            )
+
+        success, data = ProfileSerializer.get_connected_account_login_link(user=request.user)
+
+        if success:
+            return APIResponses.success_response(
+                message=APIMessages.SUCCESS, status_code=HTTP_200_OK, data=data
+            )
+
+        return APIResponses.error_response(
+            status_code=HTTP_400_BAD_REQUEST, message=APIMessages.STRIPE_ACCOUNT_LOGIN_ERROR
         )
 
 

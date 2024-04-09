@@ -17,7 +17,6 @@ class ReferralView(APIView):
 
     @swagger_auto_schema(responses=ReferralResponseExamples.GET_REFERRAL_RESPONSE)
     def get(self, request):
-
         data = ReferralSerializer.get_referral_details(user=request.user)
 
         return APIResponses.success_response(

@@ -10,7 +10,10 @@ class WalletResponseExamples:
             examples={
                 "application/json": {
                     "message": "Operation completed successfully",
-                    "data": {"walletBalance": "400.00"},
+                    "data": {
+                        "available": 0,
+                        "pending": 800,
+                    },
                 }
             },
         )

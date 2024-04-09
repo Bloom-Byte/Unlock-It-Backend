@@ -62,6 +62,7 @@ class CustomUser(AbstractUser, BaseModelClass):
     account_name = models.CharField(max_length=2048, null=True, blank=True)
     bank_name = models.CharField(max_length=2048, null=True, blank=True)
     bank_account_id = models.CharField(max_length=2048, null=True, blank=True)
+    stripe_setup_complete = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.username)
