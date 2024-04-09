@@ -16,6 +16,7 @@ services:
   app:
     build: .
     volumes:
+      - ${HOME}/bloomtest-2996c-firebase-adminsdk-qnpii-d0844416ae.json:/django/bloomtest-2996c-firebase-adminsdk-qnpii-d0844416ae.json
       - .:/django
     env_file:
       - path: .env
