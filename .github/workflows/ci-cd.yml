@@ -73,7 +73,12 @@ jobs:
           echo "FRONTEND_DOWNLOAD_ERROR_URL=${FRONTEND_DOWNLOAD_ERROR_URL}" >> .env
           echo "EMAIL_HOST_USER=${EMAIL_HOST_USER}" >> .env
           echo "EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}" >> .env
-          echo "BACKEND_DOWNLOAD_URL=${BACKEND_URL}/api/v1/download/?token" >> .env
+          echo "FRONTEND_PAYMENT_SUCCESS_URL=${{ secrets.FRONTEND_PAYMENT_SUCCESS_URL }}" >> .env
+          echo "FRONTEND_PAYMENT_CANCEL_URL=${{ secrets.FRONTEND_PAYMENT_CANCEL_URL }}" >> .env
+          echo "FRONTEND_STRIPE_ACCOUNT_SETUP_RETURN_URL=${{ secrets.FRONTEND_STRIPE_ACCOUNT_SETUP_RETURN_URL }}" >> .env
+          echo "STRIPE_APPLICATION_FEE_PERCENTAGE=${{ secrets.STRIPE_APPLICATION_FEE_PERCENTAGE }}" >> .env
+          echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> .env
           echo "GENERATE_CODE=${{ secrets.GENERATE_CODE }}" >> .env || true
 
     - name: Copy files to EC2 instance and deploy
