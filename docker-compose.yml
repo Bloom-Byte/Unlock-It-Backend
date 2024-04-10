@@ -1,18 +1,6 @@
 version: '3.12.1'
 
 services:
-  migration:
-    build:
-      context: .
-    volumes:
-      - .:/django
-    env_file:
-      - path: .env
-        required: true
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
-    command: python manage.py migrate --noinput
-
   app:
     build: .
     volumes:
@@ -27,6 +15,4 @@ services:
       - 8000:8000
     image: app:django
     container_name: my_django_container
-    command: python manage.py runserver 0.0.0.0:8000
-    depends_on:
-      - migration
+    command: bash -c "python manage.py migrate && gunicorn UnlockIt.wsgi --bind 0.0.0.0:8000 --workers 4"
