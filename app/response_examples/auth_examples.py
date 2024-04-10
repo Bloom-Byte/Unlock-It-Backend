@@ -18,6 +18,7 @@ class AuthResponseExamples:
                             "username": "username",
                             "email": "user@example.com",
                             "profilePicture": "link",
+                            "stripeSetupComplete": False,
                         },
                     },
                 }
