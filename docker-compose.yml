@@ -14,4 +14,4 @@ services:
       - 8000:8000
     image: app:django
     container_name: my_django_container
-    command: bash -c "python manage.py migrate && gunicorn UnlockIt.wsgi --bind 0.0.0.0:8000 --workers 4"
+    command: bash -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"

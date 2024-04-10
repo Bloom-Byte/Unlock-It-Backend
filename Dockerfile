@@ -14,7 +14,4 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
 CMD ["gunicorn", "UnlockIt.wsgi", "--bind", "0.0.0.0:8000", "--workers", "4"]
