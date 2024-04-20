@@ -45,7 +45,7 @@ class CustomUser(AbstractUser, BaseModelClass):
 
     login_attempts = models.PositiveIntegerField(default=0)
 
-    profile_picture = models.TextField(null=True, blank=True)
+    profile_picture = models.FileField(upload_to="profile_pictures/", null=True, blank=True)
 
     referral_code = models.CharField(max_length=1024, null=True, blank=True)
     referred_users = models.IntegerField(default=0)

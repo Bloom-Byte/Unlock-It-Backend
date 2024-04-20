@@ -262,10 +262,13 @@ class ProfileEditSerializer(serializers.Serializer):
 
         user.username = self.validated_data.get("username", user.username)
         user.email = self.validated_data.get("email", user.email)
+
+        picture = self.validated_data.get("picture", None)
+
+        if picture:
+            user.profile_picture = picture
+
         user.save()
-
-        # TODO do the image upload to s3 bucket here
-
         return ProfileDetailsSerializer(user).data
 
 
