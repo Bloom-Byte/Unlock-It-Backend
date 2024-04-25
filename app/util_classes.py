@@ -668,12 +668,13 @@ class StripeHelper:
 
     @staticmethod
     def generate_checkout_session_link(
-        line_items: list, connected_account_id: str, application_fee_amount: int
+        line_items: list, connected_account_id: str, application_fee_amount: int, reference: str
     ):
         try:
             checkout = stripe.checkout.Session.create(
                 mode="payment",
                 line_items=line_items,
+                client_reference_id=reference,
                 payment_intent_data={
                     "application_fee_amount": application_fee_amount,
                     "transfer_data": {"destination": connected_account_id},

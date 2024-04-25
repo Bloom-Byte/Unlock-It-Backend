@@ -144,27 +144,117 @@ class StripeWebhookView(APIView):
     def post(self, request):
         event = request.data
 
-        # TODO handle payout webhook
-        if event["data"]["object"]["object"] == "payout":
-            pass
+        # print(event)
 
-        # handle payment intent webhook
-        if event["data"]["object"]["object"] == "payment_intent":
+        # # TODO handle payout webhook
+        # if event["data"]["object"]["object"] == "payout":
+        #     pass
+
+        # # handle payment intent webhook
+        # if event["data"]["object"]["object"] == "payment_intent":
+        #     try:
+        #         payment_id = event["data"]["object"]["id"]
+
+        #     except Exception as error:
+        #         print(f"error: {error}")
+
+        #     response = stripe.PaymentIntent.retrieve(payment_id)
+
+        #     print(response)
+
+        #     client_secret = response["client_secret"]
+
+        #     # get transaction
+
+        #     transaction = Transaction.objects.filter(stripe_client_secret=client_secret).first()
+
+        #     if transaction is None:
+        #         # transaction not found
+        #         return APIResponses.success_response(
+        #             message=APIMessages.TRANSACTION_NOT_FOUND, status_code=HTTP_200_OK
+        #         )
+
+        #     # transaction completed already is status is success or failed
+        #     if transaction.status == TransactionStatuses.SUCCESS:
+        #         return APIResponses.success_response(
+        #             message=APIMessages.TRANSACTION_COMPLETED_ALREADY, status_code=HTTP_200_OK
+        #         )
+
+        #     amount_received = response["amount_received"] / 100
+        #     status = response["status"]
+
+        #     # update the transaction details
+
+        #     if status == "succeeded":
+        #         user: CustomUser = transaction.owner
+
+        #         # TODO do the system share calculation here
+
+        #         transaction.withdrawable_amount = amount_received
+        #         transaction.status = TransactionStatuses.SUCCESS
+        #         transaction.meta_data = response
+        #         transaction.save()
+
+        #         user.wallet_balance += amount_received
+        #         user.save()
+
+        #         payload = {
+        #             "transaction_reference": transaction.reference,
+        #             "story_reference": f"xxxxxx-{transaction.story.reference_number}",
+        #         }
+
+        #         download_string = EncryptionHelper.encrypt_download_payload(payload=payload)
+
+        #         download_link = settings.BACKEND_DOWNLOAD_URL + f"={download_string}"
+
+        #         EmailSender.send_download_link_email(
+        #             receiver=transaction.email, download_link=download_link
+        #         )
+
+        #         return APIResponses.success_response(
+        #             message=APIMessages.TRANSACTION_SUCCESSFUL, status_code=HTTP_200_OK
+        #         )
+
+        #     if status == "processing":
+        #         transaction.status = TransactionStatuses.PENDING
+        #         transaction.meta_data = response
+        #         transaction.save()
+        #         return APIResponses.success_response(
+        #             message=APIMessages.TRANSACTION_PROCESSING, status_code=HTTP_200_OK
+        #         )
+
+        #     if status == "failed":
+        #         transaction.status = TransactionStatuses.FAILED
+        #         transaction.meta_data = response
+        #         transaction.save()
+        #         return APIResponses.success_response(
+        #             message=APIMessages.TRANSACTION_FAILED, status_code=HTTP_200_OK
+        #         )
+
+        #     # return status not found
+        #     return APIResponses.success_response(
+        #         message=APIMessages.TRANSACTION_NOT_FOUND, status_code=HTTP_200_OK
+        #     )
+
+        if event["data"]["object"]["object"] == "checkout.session":
             try:
-                payment_id = event["data"]["object"]["id"]
+                checkout_id = event["data"]["object"]["id"]
 
             except Exception as error:
                 print(f"error: {error}")
+                return APIResponses.success_response(
+                    message="Error when fetching checkout id", status_code=HTTP_200_OK
+                )
 
-            response = stripe.PaymentIntent.retrieve(payment_id)
+            # event_type = event["type"]
 
-            print(response)
+            response = stripe.checkout.Session.retrieve(checkout_id)
 
-            client_secret = response["client_secret"]
+            reference = response["client_reference_id"]
 
             # get transaction
 
-            transaction = Transaction.objects.filter(stripe_client_secret=client_secret).first()
+            transaction = Transaction.objects.filter(reference=reference).first()
 
             if transaction is None:
                 # transaction not found
@@ -181,12 +271,10 @@ class StripeWebhookView(APIView):
             amount_received = response["amount_received"] / 100
             status = response["status"]
 
-            # update the transaction details
+            # # update the transaction details
 
-            if status == "succeeded":
+            if status == "paid":
                 user: CustomUser = transaction.owner
-
-                # TODO do the system share calculation here
 
                 transaction.withdrawable_amount = amount_received
                 transaction.status = TransactionStatuses.SUCCESS
@@ -231,5 +319,5 @@ class StripeWebhookView(APIView):
 
             # return status not found
             return APIResponses.success_response(
-                message=APIMessages.TRANSACTION_NOT_FOUND, status_code=HTTP_200_OK
+                message=APIMessages.TRANSACTION_STATUS_NOT_CAPTURED, status_code=HTTP_200_OK
             )

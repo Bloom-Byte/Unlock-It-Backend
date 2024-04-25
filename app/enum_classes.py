@@ -100,6 +100,7 @@ class APIMessages:
     TRANSACTION_FAILED = "Transaction Failed"
     TRANSACTION_INITIALIZED = "Transaction initiated successfully"
     TRANSACTION_PROCESSING = "Transaction Processing"
+    TRANSACTION_STATUS_NOT_CAPTURED = "Transaction status not captured"
 
     STORY_CREATED = "Story created successfully"
     STORY_UPDATED = "Story updated successfully"
