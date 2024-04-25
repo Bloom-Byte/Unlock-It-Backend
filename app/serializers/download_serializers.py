@@ -123,6 +123,7 @@ class GetPaymentLinkSerializer(serializers.Serializer):
             line_items=line_items,
             connected_account_id=connect_account_id,
             application_fee_amount=application_fee_amount,
+            reference=new_transaction.reference,
         )
 
         # data = {
