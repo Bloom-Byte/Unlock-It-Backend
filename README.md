@@ -1,8 +1,9 @@
 # Unlock-It-Backend
-Django Api Backend for Unlock-It
+Django Api Backend for Unlock-It.
 
+Unlock IT is an application that allows users to upload their files and sell them for a price. They can send this link to sell to friends or post on their social media page.
 
-
+The API uses AWS S3 for file storage and distribution, scalable storage size, and 99.99% worldwide availability.
 
 ## Development
 
